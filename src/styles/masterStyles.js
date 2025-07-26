@@ -2411,7 +2411,6 @@ export const createAbilityScorePickerStyles = (theme) => ({
     marginBottom: "8px",
   },
   abilityScoreContainer: {
-    // display: "flex",
     alignItems: "center",
     justifyContent: "center",
     gap: "8px",
