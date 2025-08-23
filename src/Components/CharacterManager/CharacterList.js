@@ -16,6 +16,7 @@ import {
 import { useTheme } from "../../contexts/ThemeContext";
 import { createCharacterCreationStyles } from "../../styles/masterStyles";
 import { characterService } from "../../services/characterService";
+import { gameSessionOptions } from "../../App/const";
 
 const CharacterList = ({
   user,
@@ -48,6 +49,15 @@ const CharacterList = ({
   const discordUserId = user?.user_metadata?.provider_id;
 
   const getAvailableGameSessions = () => {
+    if (adminMode) {
+      return gameSessionOptions
+        .filter((session) => session !== "DEVELOPMENT")
+        .map((session) => ({
+          session,
+          count: 0,
+        }));
+    }
+
     const sessionCounts = {};
     savedCharacters.forEach((char) => {
       if (char.gameSession) {
@@ -55,9 +65,13 @@ const CharacterList = ({
           (sessionCounts[char.gameSession] || 0) + 1;
       }
     });
-    return Object.entries(sessionCounts)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([session, count]) => ({ session, count }));
+
+    return gameSessionOptions
+      .filter((session) => sessionCounts[session] > 0)
+      .map((session) => ({
+        session,
+        count: sessionCounts[session],
+      }));
   };
 
   const availableGameSessions = getAvailableGameSessions();
