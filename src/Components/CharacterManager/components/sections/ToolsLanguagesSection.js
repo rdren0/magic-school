@@ -23,7 +23,6 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
         )?.toolProficiencies || []
       : [];
 
-
     const subclassTools = [];
     if (character.subclass && character.subclassChoices) {
       const subclassInfo = subclassesData[character.subclass];
@@ -59,11 +58,7 @@ const ToolsLanguagesSection = ({ character, onChange, disabled = false }) => {
 
     const characterTools = character.toolProficiencies || [];
 
-    const automaticTools = [
-      ...backgroundTools,
-      ...subclassTools,
-      ...featTools,
-    ];
+    const automaticTools = [...backgroundTools, ...subclassTools, ...featTools];
 
     return {
       background: backgroundTools,

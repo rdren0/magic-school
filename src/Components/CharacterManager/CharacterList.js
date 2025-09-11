@@ -160,6 +160,14 @@ const CharacterList = ({
       return matchesSearch && matchesFilter;
     })
     .sort((a, b) => {
+      // Always put DEVELOPMENT characters at the bottom
+      const aIsDevelopment = a.gameSession === "DEVELOPMENT";
+      const bIsDevelopment = b.gameSession === "DEVELOPMENT";
+      
+      if (aIsDevelopment && !bIsDevelopment) return 1;
+      if (!aIsDevelopment && bIsDevelopment) return -1;
+      
+      // If both are DEVELOPMENT or both are not DEVELOPMENT, sort normally
       let comparison = 0;
       switch (sortBy) {
         case "name":

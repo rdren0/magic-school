@@ -1,4 +1,5 @@
-import { standardFeats } from "../../../../../SharedData";
+import { standardFeats, backgroundsData } from "../../../../../SharedData";
+import { heritageDescriptions } from "../../../../../SharedData/heritageData";
 
 export const skillsByCastingStyle = {
   "Willpower Caster": [
@@ -91,6 +92,61 @@ export const SUBCLASS_SKILL_NAMES = [
   "Muggle Studies",
 ];
 
+// Helper function to compute background skills from character's current background
+export const computeBackgroundSkills = (character) => {
+  if (!character.background) return [];
+  
+  const background = backgroundsData[character.background];
+  if (!background || !background.skillProficiencies) return [];
+  
+  return [...background.skillProficiencies];
+};
+
+// Helper function to check heritage for skill proficiencies
+const checkForSkillProficiencies = (heritage) => {
+  if (!heritage || !heritage.features) return [];
+  
+  const skills = [];
+  heritage.features.forEach((feature) => {
+    if (feature.skillProficiencies) {
+      skills.push(...feature.skillProficiencies);
+    }
+  });
+  
+  return skills;
+};
+
+// Helper function to compute heritage skills from character's current heritage choices
+export const computeHeritageSkills = (character) => {
+  if (!character.innateHeritage) return [];
+  
+  const heritage = heritageDescriptions[character.innateHeritage];
+  if (!heritage) return [];
+  
+  const heritageSkills = checkForSkillProficiencies(heritage);
+  
+  // Add choice-based skills from heritage choices
+  const choiceSkills = [];
+  if (heritage.features && character.heritageChoices && character.heritageChoices[character.innateHeritage]) {
+    const choices = character.heritageChoices[character.innateHeritage];
+    heritage.features.forEach((feature, featureIndex) => {
+      if (feature.choices) {
+        feature.choices.forEach((choice, choiceIndex) => {
+          const choiceKey = `${featureIndex}_${choiceIndex}`;
+          const selectedChoice = choices[choiceKey];
+          if (selectedChoice && choice.skillProficiencies) {
+            if (choice.skillProficiencies.includes(selectedChoice)) {
+              choiceSkills.push(selectedChoice);
+            }
+          }
+        });
+      }
+    });
+  }
+  
+  return [...heritageSkills, ...choiceSkills];
+};
+
 export const getAvailableSkillsForCastingStyle = (castingStyle) => {
   return castingStyle ? skillsByCastingStyle[castingStyle] || [] : [];
 };
@@ -145,8 +201,13 @@ export const parseSubclassSkills = (character) => {
   const hasExpertiseGranter = [];
   const subclassChoices = character.subclassChoices || {};
 
-  const backgroundSkills = character.backgroundSkills || [];
-  const innateHeritageSkills = character.innateHeritageSkills || [];
+  // Use the same computed skills logic here for consistency
+  const backgroundSkills = character.backgroundSkills?.length > 0 
+    ? character.backgroundSkills 
+    : computeBackgroundSkills(character);
+  const innateHeritageSkills = character.innateHeritageSkills?.length > 0
+    ? character.innateHeritageSkills
+    : computeHeritageSkills(character);
 
   Object.values(subclassChoices).forEach((choice) => {
     if (typeof choice === "object" && choice.mainChoice && choice.subChoice) {
@@ -189,8 +250,15 @@ export const organizeSkillsBySource = (character) => {
   const availableCastingSkills = getAvailableSkillsForCastingStyle(
     character.castingStyle
   );
-  const backgroundSkills = character.backgroundSkills || [];
-  const innateHeritageSkills = character.innateHeritageSkills || [];
+  
+  // Use stored arrays if they exist, otherwise compute them from current character choices
+  const backgroundSkills = character.backgroundSkills?.length > 0 
+    ? character.backgroundSkills 
+    : computeBackgroundSkills(character);
+  const innateHeritageSkills = character.innateHeritageSkills?.length > 0
+    ? character.innateHeritageSkills
+    : computeHeritageSkills(character);
+  
   const featSkills = parseFeatSkills(character);
 
   const {
@@ -203,13 +271,14 @@ export const organizeSkillsBySource = (character) => {
   const selectedCastingStyleSkills = allSkillProficiencies.filter((skill) => {
     if (!availableCastingSkills.includes(skill)) return false;
 
+    // Skills from other sources don't count toward casting style selection limit
     if (
       backgroundSkills.includes(skill) ||
       innateHeritageSkills.includes(skill) ||
       subclassSkills.includes(skill) ||
       featSkills.includes(skill)
     ) {
-      return studyBuddySkills.includes(skill);
+      return false;
     }
 
     return true;
@@ -422,6 +491,6 @@ export const getStudyBuddySummary = (character) => {
     expertiseSkills,
     hasExpertiseGranter,
     hasStudyBuddy: studyBuddySkills.length > 0,
-    hasExpertiseGranter: hasExpertiseGranter.length > 0,
+    hasExpertiseGranterFeature: hasExpertiseGranter.length > 0,
   };
 };

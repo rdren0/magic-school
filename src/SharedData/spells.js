@@ -1732,19 +1732,6 @@ export const spellsData = {
       ],
       "5th Level": [
         {
-          name: "Insectum Maxima",
-          class: ["Transfiguration"],
-          level: "5th Level",
-          castingTime: "Action",
-          range: "300 Feet",
-          duration: "Concentration, up to 10 minutes",
-          year: 6,
-          description:
-            "Swarming, biting locusts fill a 20-foot-radius sphere centered on a point you choose within range. The sphere spreads around corners. The sphere remains for the duration, and its area is lightly obscured. The sphere's area is difficult terrain. When the area appears, each creature in it must make a Constitution saving throw. A creature takes 4d10 piercing damage on a failed save, or half as much damage on a successful one. A creature must also make this saving throw when it enters the spell's area for the first time on a turn or ends its turn there.",
-          higherLevels:
-            "When you cast this spell using a spell slot of 6th level or higher, the damage increases by 1d10 for each slot level above 5th.",
-        },
-        {
           name: "Draconifors",
           class: ["Transfiguration"],
           level: "5th Level",
@@ -1756,6 +1743,18 @@ export const spellsData = {
             "A particularly intimidating display of transfiguration, this spell turns a desk-sized object into a miniature version of an adult dragon. Choose either one or two inanimate, nonmagical objects you can see within range that each fill a 5-foot cube and choose one of the following options: One dragon wyrmling of challenge rating 4 or lower, or Two dragon wyrmlings of challenge rating 2 or lower. The object becomes a Medium-sized dragon construct with the chosen wyrmling's statistics, which is untransfigured when it drops to 0 hit points or when the spell ends. The dragon construct is friendly to you and your companions for the duration. Roll initiative for the dragon construct, which has its own turns. It obeys any verbal commands that you issue to it (no action required by you). If you don't issue any commands to it, it defends itself from hostile creatures, but otherwise takes no actions. If your concentration is broken, the dragon construct doesn't disappear. Instead, you lose control of the construct, it becomes hostile toward you and your companions, and it might attack. An uncontrolled dragon construct can't be dismissed by you, and it untransfigures 10 minutes after you transfigured it. The HM has the creature's statistics.",
           higherLevels:
             "When you cast this spell using a spell slot of 7th level, choose one of the following options: Two dragon wyrmlings of challenge rating 3 or lower, or Three dragon wyrmlings of challenge rating 2 or lower. When you cast this spell using a spell slot of 9th level, choose one of the following options: Two dragon wyrmlings of challenge rating 4 or lower, or Four dragon wyrmlings of challenge rating 2 or lower.",
+        },
+        {
+          name: "The Transmogrifian Torture",
+          class: [],
+          level: "5th Level",
+          castingTime: "1 action",
+          range: "30 feet",
+          duration: "Concentration, up to 1 minute",
+          year: 5,
+          restriction: true,
+          description:
+            "Slowly rearranges and dissolves a creature's internal organs, dealing 2d12 acid damage per turn and causing crippling pain",
         },
       ],
       "6th Level": [

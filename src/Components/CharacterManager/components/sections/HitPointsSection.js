@@ -21,6 +21,16 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     return hpData[castingStyle] || { hitDie: "1d6", base: 6 };
   };
 
+  const getAvgPerLevel = (castingStyle) => {
+    const avgPerLevel = {
+      "Technique Caster": 4,
+      "Intellect Caster": 5,
+      "Vigor Caster": 8,
+      "Willpower Caster": 6,
+    };
+    return avgPerLevel[castingStyle] || 4;
+  };
+
   const castingHpData = getCastingStyleHpData(character.castingStyle);
   const conMod = character.abilityScores?.constitution
     ? Math.floor((character.abilityScores.constitution - 10) / 2)
@@ -31,17 +41,32 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
     const con = character.abilityScores?.constitution || 8;
     const conMod = Math.floor((con - 10) / 2);
     const toughFeatBonus = calculateToughFeatHPBonus(character);
-    return level * (castingHpData.base + conMod) + toughFeatBonus;
+
+    // Correct HP calculation: base HP at level 1 + average per additional level
+    const baseHP = castingHpData.base + conMod;
+    const additionalHP =
+      (level - 1) * (getAvgPerLevel(character.castingStyle) + conMod);
+
+    return Math.max(1, baseHP + additionalHP + toughFeatBonus);
   };
 
   const rollHp = () => {
+    const level = character.level || 1;
     const con = character.abilityScores?.constitution || 8;
     const conMod = Math.floor((con - 10) / 2);
-    const rolled = Math.floor(Math.random() * castingHpData.base) + 1 + conMod;
     const toughFeatBonus = calculateToughFeatHPBonus(character);
+
+    // Roll for level 1 HP: hit die + con mod
+    const level1Roll =
+      Math.floor(Math.random() * castingHpData.base) + 1 + conMod;
+
+    // For levels 2+, roll average hit die per level + con mod
+    const avgPerLevel = getAvgPerLevel(character.castingStyle);
+    const additionalLevelsHP = (level - 1) * (avgPerLevel + conMod);
+
     const totalHp = Math.max(
       1,
-      rolled * (character.level || 1) + toughFeatBonus
+      level1Roll + additionalLevelsHP + toughFeatBonus
     );
 
     setRolledHp(totalHp);
@@ -313,7 +338,9 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
             {!isHpManualMode && rolledHp === null && (
               <div style={hpStyles.calculationRow}>
                 <span style={{ color: theme.textSecondary, fontSize: "14px" }}>
-                  = ({castingHpData.base} + {conMod}) × {character.level || 1} ={" "}
+                  = ({castingHpData.base} + {conMod}) +{" "}
+                  {character.level - 1 || 0} × (
+                  {getAvgPerLevel(character.castingStyle)} + {conMod}) ={" "}
                   {calculateHitPoints({ character })}
                 </span>
               </div>
@@ -321,8 +348,10 @@ const HitPointsSection = ({ character, onChange, disabled = false }) => {
             {rolledHp !== null && (
               <div style={hpStyles.calculationRow}>
                 <span style={{ color: theme.success, fontSize: "14px" }}>
-                  Rolled: ({castingHpData.hitDie} + {conMod}) ×{" "}
-                  {character.level || 1} CON = {rolledHp}
+                  Rolled: Level 1 ({castingHpData.hitDie} + {conMod}) +{" "}
+                  {character.level - 1 || 0} × (
+                  {getAvgPerLevel(character.castingStyle)} + {conMod}) ={" "}
+                  {rolledHp}
                 </span>
               </div>
             )}

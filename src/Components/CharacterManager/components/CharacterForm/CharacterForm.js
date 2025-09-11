@@ -16,6 +16,7 @@ import {
   ToolsLanguagesSection,
   ASILevelChoices,
   MagicModifiersSection,
+  MetamagicSection,
   NotesSection,
   BasicInfoSection,
 } from "../sections";
@@ -75,6 +76,7 @@ const CharacterForm = ({
       skills: false,
       toolsLanguages: false,
       magicModifiers: false,
+      metamagic: false,
       notes: false,
     },
     mode
@@ -434,6 +436,25 @@ const CharacterForm = ({
       )}
 
       <FormSection
+        title="Metamagic & Sorcery Points"
+        subtitle="Font of magic and metamagic options"
+        isLocked={sectionLocks.metamagic}
+        onToggleLock={
+          canLock ? () => toggleSectionLock("metamagic") : undefined
+        }
+        lockable={canLock}
+      >
+        <MetamagicSection
+          character={character}
+          onUpdate={updateCharacterBulk}
+          mode={mode}
+          theme={theme}
+          styles={styles}
+          locked={sectionLocks.metamagic}
+        />
+      </FormSection>
+
+      <FormSection
         title="Skills & Proficiencies"
         subtitle="Skill proficiencies and expertise"
         isLocked={sectionLocks.skills}
@@ -453,7 +474,9 @@ const CharacterForm = ({
         title="Tool Proficiencies"
         subtitle="Tool proficiencies"
         isLocked={sectionLocks.toolsLanguages}
-        onToggleLock={canLock ? () => toggleSectionLock("toolsLanguages") : undefined}
+        onToggleLock={
+          canLock ? () => toggleSectionLock("toolsLanguages") : undefined
+        }
         lockable={canLock}
       >
         <ToolsLanguagesSection
@@ -517,6 +540,7 @@ const CharacterForm = ({
           disabled={sectionLocks.magicModifiers}
         />
       </FormSection>
+
       <FormSection
         title="Character Notes"
         subtitle="Additional notes, character flaws, backstory etc"
