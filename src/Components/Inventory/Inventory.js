@@ -547,12 +547,12 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    opacity: unreadOwlMailCount > 0 ? 1 : 0.3,
+                    opacity: unreadOwlMailCount > 0 ? 1 : 0.7,
                     transition: "opacity 0.2s, transform 0.2s, color 0.2s",
                     padding: "4px",
                     display: "flex",
                     alignItems: "center",
-                    color: unreadOwlMailCount > 0 ? "black" : theme.textSecondary,
+                    color: unreadOwlMailCount > 0 ? theme.primary : theme.textSecondary,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.opacity = "1";
@@ -560,9 +560,9 @@ const Inventory = ({ user, selectedCharacter, supabase, adminMode }) => {
                     e.currentTarget.style.color = theme.text;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = unreadOwlMailCount > 0 ? "1" : "0.3";
+                    e.currentTarget.style.opacity = unreadOwlMailCount > 0 ? "1" : "0.7";
                     e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.color = unreadOwlMailCount > 0 ? "black" : theme.textSecondary;
+                    e.currentTarget.style.color = unreadOwlMailCount > 0 ? theme.primary : theme.textSecondary;
                   }}
                   title={unreadOwlMailCount > 0 ? `Owl Post (${unreadOwlMailCount} unread)` : "Owl Post"}
                 >
