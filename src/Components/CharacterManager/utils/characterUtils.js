@@ -617,31 +617,70 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
     const increase = feat.benefits.abilityScoreIncrease;
 
     // For repeatable feats, we need to process each instance separately
-    const asiChoices = character.asiChoices || character.asi_choices;
-    if (feat.repeatable && asiChoices) {
-      // Find all ASI levels where this feat was selected
-      Object.entries(asiChoices).forEach(([level, choice]) => {
-        if (choice.type === "feat" && choice.selectedFeat === featName) {
-          const instanceKey = `${featName}_level${level}`;
-          // Merge the global featChoices with the choice-specific featChoices
-          const mergedFeatChoices = {
-            ...featChoices,
-            ...(choice.featChoices || {})
-          };
+    if (feat.repeatable) {
+      let instancesProcessed = 0;
 
-          processFeatAbilityIncrease(
-            feat,
-            increase,
-            instanceKey,
-            mergedFeatChoices,
-            modifiers,
-            featDetails,
-            character
-          );
-        }
-      });
+      // Process ASI instances
+      const asiChoices = character.asiChoices || character.asi_choices;
+      if (asiChoices) {
+        Object.entries(asiChoices).forEach(([level, choice]) => {
+          if (choice.type === "feat" && choice.selectedFeat === featName) {
+            const instanceKey = `${featName}_level${level}`;
+            const mergedFeatChoices = {
+              ...featChoices,
+              ...(choice.featChoices || {})
+            };
+
+            processFeatAbilityIncrease(
+              feat,
+              increase,
+              instanceKey,
+              mergedFeatChoices,
+              modifiers,
+              featDetails,
+              character
+            );
+            instancesProcessed++;
+          }
+        });
+      }
+
+      // Process level 1 standard feat instance
+      if (character.level1ChoiceType === "feat" &&
+          character.standardFeats &&
+          character.standardFeats.includes(featName)) {
+        const instanceKey = `${featName}_level1`;
+        processFeatAbilityIncrease(
+          feat,
+          increase,
+          instanceKey,
+          featChoices,
+          modifiers,
+          featDetails,
+          character
+        );
+        instancesProcessed++;
+      }
+
+      // Process additional feat instances
+      const additionalFeats = character.additionalFeats || character.additional_feats || [];
+      const additionalFeatCount = additionalFeats.filter(f => f === featName).length;
+
+      for (let i = 0; i < additionalFeatCount; i++) {
+        const instanceKey = i === 0 ? featName : `${featName}_additional_${i}`;
+        processFeatAbilityIncrease(
+          feat,
+          increase,
+          instanceKey,
+          featChoices,
+          modifiers,
+          featDetails,
+          character
+        );
+        instancesProcessed++;
+      }
     } else {
-      // Non-repeatable feat or feat selected outside ASI
+      // Non-repeatable feat
       processFeatAbilityIncrease(
         feat,
         increase,
