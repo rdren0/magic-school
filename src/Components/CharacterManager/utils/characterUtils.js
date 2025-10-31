@@ -711,6 +711,8 @@ const processFeatAbilityIncrease = (
   const choiceKey1 = `${featKey}_abilityChoice`;
   const choiceKey2 = `${featKey}_ability_0`;
   const choiceKey3 = `${featKey}_ability`;
+  // Fallback for corrupted keys from old bug (e.g., "Resilient_levellevel1")
+  const choiceKey4 = featKey === `${feat.name}_level1` ? `${feat.name}_levellevel1_abilityChoice` : null;
 
   switch (increase.type) {
     case "fixed":
@@ -722,6 +724,7 @@ const processFeatAbilityIncrease = (
         featChoices[choiceKey1] ||
         featChoices[choiceKey2] ||
         featChoices[choiceKey3] ||
+        (choiceKey4 && featChoices[choiceKey4]) ||
         increase.abilities?.[0];
 
       break;
