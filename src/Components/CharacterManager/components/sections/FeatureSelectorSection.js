@@ -554,7 +554,9 @@ const FeatureSelectorSection = ({
       };
 
       if (choiceKey.includes("abilityChoice")) {
-        newChoices[`${featName}_ability_0`] = value;
+        // Extract the instance key from the choiceKey (e.g., "Resilient_level8" from "Resilient_level8_abilityChoice")
+        const instanceKey = choiceKey.replace("_abilityChoice", "");
+        newChoices[`${instanceKey}_ability_0`] = value;
       }
 
       return {

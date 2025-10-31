@@ -34,16 +34,9 @@ export const getAllSelectedFeats = (character) => {
     selectedFeats.push(...character.additionalFeats);
   }
 
-  if (character.asiChoices) {
-    Object.values(character.asiChoices).forEach((choice) => {
-      if (choice.type === "feat" && choice.selectedFeat) {
-        selectedFeats.push(choice.selectedFeat);
-      }
-    });
-  }
-
-  if (character.asi_choices) {
-    Object.values(character.asi_choices).forEach((choice) => {
+  const asiChoices = character.asiChoices || character.asi_choices;
+  if (asiChoices) {
+    Object.values(asiChoices).forEach((choice) => {
       if (choice.type === "feat" && choice.selectedFeat) {
         selectedFeats.push(choice.selectedFeat);
       }
@@ -54,10 +47,13 @@ export const getAllSelectedFeats = (character) => {
 };
 
 export const handleASIChoiceChange = (character, level, choiceType) => {
+  const asiKey = character.asi_choices ? 'asi_choices' : 'asiChoices';
+  const existingChoices = character[asiKey] || {};
+
   const updatedAsiChoices = {
-    ...character.asiChoices,
+    ...existingChoices,
     [level]: {
-      ...character.asiChoices?.[level],
+      ...existingChoices?.[level],
       type: choiceType,
       ...(choiceType === "asi"
         ? {
@@ -75,7 +71,7 @@ export const handleASIChoiceChange = (character, level, choiceType) => {
 
   return {
     ...character,
-    asiChoices: updatedAsiChoices,
+    [asiKey]: updatedAsiChoices,
   };
 };
 
@@ -85,13 +81,16 @@ export const handleASIFeatChange = (
   featName,
   featChoices = {}
 ) => {
+  const asiKey = character.asi_choices ? 'asi_choices' : 'asiChoices';
+  const existingChoices = character[asiKey] || {};
+
   if (featName) {
     const { standardFeats } = require("../../../SharedData/standardFeatData");
     const feat = standardFeats.find((f) => f.name === featName);
 
     if (!feat?.repeatable) {
       const currentSelectedFeats = getAllSelectedFeats(character);
-      const currentLevelChoice = character.asiChoices?.[level];
+      const currentLevelChoice = existingChoices?.[level];
 
       const otherFeats = currentSelectedFeats.filter((feat) => {
         return !(
@@ -109,9 +108,9 @@ export const handleASIFeatChange = (
   }
 
   const updatedAsiChoices = {
-    ...character.asiChoices,
+    ...existingChoices,
     [level]: {
-      ...character.asiChoices?.[level],
+      ...existingChoices?.[level],
       type: "feat",
       selectedFeat: featName,
       featChoices: featChoices,
@@ -121,15 +120,18 @@ export const handleASIFeatChange = (
 
   return {
     ...character,
-    asiChoices: updatedAsiChoices,
+    [asiKey]: updatedAsiChoices,
   };
 };
 
 export const handleASIAbilityChange = (character, level, abilityUpdates) => {
+  const asiKey = character.asi_choices ? 'asi_choices' : 'asiChoices';
+  const existingChoices = character[asiKey] || {};
+
   const updatedAsiChoices = {
-    ...character.asiChoices,
+    ...existingChoices,
     [level]: {
-      ...character.asiChoices?.[level],
+      ...existingChoices?.[level],
       type: "asi",
       abilityScoreIncreases: abilityUpdates,
       selectedFeat: null,
@@ -139,7 +141,7 @@ export const handleASIAbilityChange = (character, level, abilityUpdates) => {
 
   return {
     ...character,
-    asiChoices: updatedAsiChoices,
+    [asiKey]: updatedAsiChoices,
   };
 };
 
@@ -270,6 +272,7 @@ export const getFeatProgressionInfo = (character) => {
   const currentLevel = character.level || 1;
   const availableASILevels = getAvailableASILevels(currentLevel);
   const nextASILevel = [4, 8, 12, 16, 19].find((level) => currentLevel < level);
+  const asiChoices = character.asiChoices || character.asi_choices;
 
   const choices = [];
 
@@ -289,7 +292,7 @@ export const getFeatProgressionInfo = (character) => {
   }
 
   availableASILevels.forEach((level) => {
-    const asiChoice = character.asiChoices?.[level];
+    const asiChoice = asiChoices?.[level];
     if (asiChoice) {
       if (asiChoice.type === "asi") {
         const increases = asiChoice.abilityScoreIncreases || [];
@@ -383,9 +386,10 @@ export const isCharacterComplete = (character) => {
   }
 
   if (character.level > 1) {
+    const asiChoices = character.asiChoices || character.asi_choices;
     const requiredASILevels = getAvailableASILevels(character.level);
     for (const level of requiredASILevels) {
-      const choice = character.asiChoices?.[level];
+      const choice = asiChoices?.[level];
       if (!choice || !choice.type) {
         return false;
       }
@@ -594,6 +598,7 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
 
   const uniqueFeats = [...new Set(allSelectedFeats)];
 
+  // Process each unique feat
   uniqueFeats.forEach((featName) => {
     const feat = standardFeats.find((f) => f.name === featName);
 
@@ -603,71 +608,119 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
 
     const increase = feat.benefits.abilityScoreIncrease;
 
-    let abilityToIncrease;
+    // For repeatable feats, we need to process each instance separately
+    const asiChoices = character.asiChoices || character.asi_choices;
+    if (feat.repeatable && asiChoices) {
+      // Find all ASI levels where this feat was selected
+      Object.entries(asiChoices).forEach(([level, choice]) => {
+        if (choice.type === "feat" && choice.selectedFeat === featName) {
+          const instanceKey = `${featName}_level${level}`;
+          // Merge the global featChoices with the choice-specific featChoices
+          const mergedFeatChoices = {
+            ...featChoices,
+            ...(choice.featChoices || {})
+          };
 
-    const choiceKey1 = `${featName}_ability_0`;
-    const choiceKey2 = `${featName}_abilityChoice`;
-    const choiceKey3 = `${featName}_ability`;
-
-    switch (increase.type) {
-      case "fixed":
-        abilityToIncrease = increase.ability;
-        break;
-      case "choice":
-      case "choice_any":
-        abilityToIncrease =
-          featChoices[choiceKey1] ||
-          featChoices[choiceKey2] ||
-          featChoices[choiceKey3] ||
-          increase.abilities?.[0];
-
-        break;
-      case "spellcasting_ability":
-        abilityToIncrease = getSpellcastingAbility(character);
-        break;
-      case "multiple":
-        if (increase.increases && Array.isArray(increase.increases)) {
-          increase.increases.forEach((abilityIncrease) => {
-            if (
-              abilityIncrease.ability &&
-              abilityIncrease.amount &&
-              modifiers.hasOwnProperty(abilityIncrease.ability)
-            ) {
-              modifiers[abilityIncrease.ability] += abilityIncrease.amount;
-
-              if (!featDetails[abilityIncrease.ability]) {
-                featDetails[abilityIncrease.ability] = [];
-              }
-              featDetails[abilityIncrease.ability].push({
-                source: featName,
-                amount: abilityIncrease.amount,
-              });
-            }
-          });
+          processFeatAbilityIncrease(
+            feat,
+            increase,
+            instanceKey,
+            mergedFeatChoices,
+            modifiers,
+            featDetails,
+            character
+          );
         }
-        return;
-      default:
-        if (increase.ability && !increase.type) {
-          abilityToIncrease = increase.ability;
-        }
-        break;
-    }
-
-    if (abilityToIncrease && modifiers.hasOwnProperty(abilityToIncrease)) {
-      modifiers[abilityToIncrease] += increase.amount;
-
-      if (!featDetails[abilityToIncrease]) {
-        featDetails[abilityToIncrease] = [];
-      }
-      featDetails[abilityToIncrease].push({
-        source: "feat",
-        featName,
-        amount: increase.amount,
       });
+    } else {
+      // Non-repeatable feat or feat selected outside ASI
+      processFeatAbilityIncrease(
+        feat,
+        increase,
+        featName,
+        featChoices,
+        modifiers,
+        featDetails,
+        character
+      );
     }
   });
 
   return { modifiers, featDetails };
+};
+
+// Helper function to process ability increase for a feat instance
+const processFeatAbilityIncrease = (
+  feat,
+  increase,
+  featKey,
+  featChoices,
+  modifiers,
+  featDetails,
+  character
+) => {
+  let abilityToIncrease;
+
+  const choiceKey1 = `${featKey}_abilityChoice`;
+  const choiceKey2 = `${featKey}_ability_0`;
+  const choiceKey3 = `${featKey}_ability`;
+
+  switch (increase.type) {
+    case "fixed":
+      abilityToIncrease = increase.ability;
+      break;
+    case "choice":
+    case "choice_any":
+      abilityToIncrease =
+        featChoices[choiceKey1] ||
+        featChoices[choiceKey2] ||
+        featChoices[choiceKey3] ||
+        increase.abilities?.[0];
+
+      break;
+    case "spellcasting_ability":
+      abilityToIncrease = getSpellcastingAbility(character);
+      break;
+    case "multiple":
+      if (increase.increases && Array.isArray(increase.increases)) {
+        increase.increases.forEach((abilityIncrease) => {
+          if (
+            abilityIncrease.ability &&
+            abilityIncrease.amount &&
+            modifiers.hasOwnProperty(abilityIncrease.ability)
+          ) {
+            modifiers[abilityIncrease.ability] += abilityIncrease.amount;
+
+            if (!featDetails[abilityIncrease.ability]) {
+              featDetails[abilityIncrease.ability] = [];
+            }
+            featDetails[abilityIncrease.ability].push({
+              source: feat.name,
+              amount: abilityIncrease.amount,
+            });
+          }
+        });
+      }
+      return;
+    default:
+      if (increase.ability && !increase.type) {
+        abilityToIncrease = increase.ability;
+      }
+      break;
+  }
+
+  if (abilityToIncrease && modifiers.hasOwnProperty(abilityToIncrease)) {
+    modifiers[abilityToIncrease] += increase.amount;
+
+    if (!featDetails[abilityToIncrease]) {
+      featDetails[abilityToIncrease] = [];
+    }
+    featDetails[abilityToIncrease].push({
+      source: "feat",
+      featName: feat.name,
+      amount: increase.amount,
+    });
+  }
 };
 
 export const calculateBackgroundModifiers = (character) => {
