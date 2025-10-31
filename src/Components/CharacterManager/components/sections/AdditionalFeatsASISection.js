@@ -250,15 +250,19 @@ const AdditionalFeatsASISection = ({
                   >
                     Feats:
                   </div>
-                  {(() => {
-                    // Calculate final ability scores once for all feats
-                    const finalAbilityScores = calculateFinalAbilityScores(character);
+                  {additionalFeats.map((featName, index) => {
+                    const feat = standardFeats.find((f) => f.name === featName);
+                    const requiredChoices = getRequiredChoices(feat);
+                    const featChoicesData =
+                      character.featChoices || character.feat_choices || {};
 
-                    return additionalFeats.map((featName, index) => {
-                      const feat = standardFeats.find((f) => f.name === featName);
-                      const requiredChoices = getRequiredChoices(feat);
-                      const featChoicesData =
-                        character.featChoices || character.feat_choices || {};
+                    // Calculate ability scores EXCLUDING the current feat to avoid double-counting
+                    const characterWithoutThisFeat = {
+                      ...character,
+                      additionalFeats: (character.additionalFeats || []).filter(f => f !== featName),
+                      additional_feats: (character.additional_feats || []).filter(f => f !== featName),
+                    };
+                    const finalAbilityScores = calculateFinalAbilityScores(characterWithoutThisFeat);
 
                     return (
                       <div
@@ -429,8 +433,7 @@ const AdditionalFeatsASISection = ({
                         )}
                       </div>
                     );
-                    });
-                  })()}
+                  })}
                 </div>
               )}
 
