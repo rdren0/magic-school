@@ -48,7 +48,10 @@ export const getAllSelectedFeats = (character) => {
 
 export const handleASIChoiceChange = (character, level, choiceType) => {
   // Determine which key format the character uses, defaulting to snake_case (database format)
-  const asiKey = character.asiChoices && !character.asi_choices ? 'asiChoices' : 'asi_choices';
+  const asiKey =
+    character.asiChoices && !character.asi_choices
+      ? "asiChoices"
+      : "asi_choices";
   const existingChoices = character[asiKey] || {};
 
   const updatedAsiChoices = {
@@ -83,7 +86,10 @@ export const handleASIFeatChange = (
   featChoices = {}
 ) => {
   // Determine which key format the character uses, defaulting to snake_case (database format)
-  const asiKey = character.asiChoices && !character.asi_choices ? 'asiChoices' : 'asi_choices';
+  const asiKey =
+    character.asiChoices && !character.asi_choices
+      ? "asiChoices"
+      : "asi_choices";
   const existingChoices = character[asiKey] || {};
 
   if (featName) {
@@ -111,18 +117,20 @@ export const handleASIFeatChange = (
 
   const updatedAsiChoices = {
     ...existingChoices,
-    [level]: featName ? {
-      ...existingChoices?.[level],
-      type: "feat",
-      selectedFeat: featName,
-      featChoices: featChoices,
-      abilityScoreIncreases: null,
-    } : {
-      type: null,
-      selectedFeat: null,
-      featChoices: {},
-      abilityScoreIncreases: null,
-    },
+    [level]: featName
+      ? {
+          ...existingChoices?.[level],
+          type: "feat",
+          selectedFeat: featName,
+          featChoices: featChoices,
+          abilityScoreIncreases: null,
+        }
+      : {
+          type: null,
+          selectedFeat: null,
+          featChoices: {},
+          abilityScoreIncreases: null,
+        },
   };
 
   return {
@@ -133,7 +141,10 @@ export const handleASIFeatChange = (
 
 export const handleASIAbilityChange = (character, level, abilityUpdates) => {
   // Determine which key format the character uses, defaulting to snake_case (database format)
-  const asiKey = character.asiChoices && !character.asi_choices ? 'asiChoices' : 'asi_choices';
+  const asiKey =
+    character.asiChoices && !character.asi_choices
+      ? "asiChoices"
+      : "asi_choices";
   const existingChoices = character[asiKey] || {};
 
   const updatedAsiChoices = {
@@ -170,12 +181,12 @@ export const calculateFinalAbilityScores = (character) => {
 
   const finalScores = {};
 
-  const featChoices = { ...character.featChoices };
+  const featChoices = { ...(character.featChoices || character.feat_choices || {}) };
   const asiChoices = character.asiChoices || character.asi_choices;
   if (asiChoices) {
     Object.values(asiChoices).forEach((choice) => {
-      if (choice.type === "feat" && choice.featChoices) {
-        Object.assign(featChoices, choice.featChoices);
+      if (choice.type === "feat" && (choice.featChoices || choice.feat_choices)) {
+        Object.assign(featChoices, choice.featChoices || choice.feat_choices || {});
       }
     });
   }
@@ -628,7 +639,7 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
             const instanceKey = `${featName}_level${level}`;
             const mergedFeatChoices = {
               ...featChoices,
-              ...(choice.featChoices || {})
+              ...(choice.featChoices || {}),
             };
 
             processFeatAbilityIncrease(
@@ -646,9 +657,11 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
       }
 
       // Process level 1 standard feat instance
-      if (character.level1ChoiceType === "feat" &&
-          character.standardFeats &&
-          character.standardFeats.includes(featName)) {
+      if (
+        character.level1ChoiceType === "feat" &&
+        character.standardFeats &&
+        character.standardFeats.includes(featName)
+      ) {
         const instanceKey = `${featName}_level1`;
         processFeatAbilityIncrease(
           feat,
@@ -663,8 +676,11 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
       }
 
       // Process additional feat instances
-      const additionalFeats = character.additionalFeats || character.additional_feats || [];
-      const additionalFeatCount = additionalFeats.filter(f => f === featName).length;
+      const additionalFeats =
+        character.additionalFeats || character.additional_feats || [];
+      const additionalFeatCount = additionalFeats.filter(
+        (f) => f === featName
+      ).length;
 
       for (let i = 0; i < additionalFeatCount; i++) {
         const instanceKey = i === 0 ? featName : `${featName}_additional_${i}`;
@@ -712,7 +728,10 @@ const processFeatAbilityIncrease = (
   const choiceKey2 = `${featKey}_ability_0`;
   const choiceKey3 = `${featKey}_ability`;
   // Fallback for corrupted keys from old bug (e.g., "Resilient_levellevel1")
-  const choiceKey4 = featKey === `${feat.name}_level1` ? `${feat.name}_levellevel1_abilityChoice` : null;
+  const choiceKey4 =
+    featKey === `${feat.name}_level1`
+      ? `${feat.name}_levellevel1_abilityChoice`
+      : null;
 
   switch (increase.type) {
     case "fixed":
