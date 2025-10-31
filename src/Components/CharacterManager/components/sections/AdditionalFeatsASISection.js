@@ -90,6 +90,11 @@ const AdditionalFeatsASISection = ({
               : `Resilient_additional_${resilientCountBefore}`;
           }
 
+          // Get the currently selected ability for this instance (if any)
+          const featChoicesData = character.featChoices || character.feat_choices || {};
+          const currentChoiceKey = `${currentInstanceKey}_abilityChoice`;
+          const currentlySelected = featChoicesData[currentChoiceKey];
+
           // Get previously selected Resilient abilities (excluding current instance)
           const selectedResilientAbilities = getResilientAbilityChoices(character, currentInstanceKey);
 
@@ -98,6 +103,12 @@ const AdditionalFeatsASISection = ({
             !baseSavingThrows.includes(ability) &&
             !selectedResilientAbilities.includes(ability)
           );
+
+          // Always include the currently selected ability even if it would be filtered out
+          // This allows users to see and modify their existing selection
+          if (currentlySelected && !abilityOptions.includes(currentlySelected)) {
+            abilityOptions.push(currentlySelected);
+          }
         }
 
         choices.push({

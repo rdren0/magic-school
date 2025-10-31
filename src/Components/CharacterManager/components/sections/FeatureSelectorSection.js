@@ -334,6 +334,10 @@ const FeatureSelectorSection = ({
       // Get current instance key to exclude from filtering
       const currentInstanceKey = contextLevel ? `Resilient_level${contextLevel}` : "Resilient";
 
+      // Get the currently selected ability for this instance (if any)
+      const currentChoiceKey = `${currentInstanceKey}_abilityChoice`;
+      const currentlySelected = featChoices[currentChoiceKey];
+
       // Get previously selected Resilient abilities (excluding current instance)
       const selectedResilientAbilities = getResilientAbilityChoices(character, currentInstanceKey);
 
@@ -342,6 +346,12 @@ const FeatureSelectorSection = ({
         !baseSavingThrows.includes(ability) &&
         !selectedResilientAbilities.includes(ability)
       );
+
+      // Always include the currently selected ability even if it would be filtered out
+      // This allows users to see and modify their existing selection
+      if (currentlySelected && !abilities.includes(currentlySelected)) {
+        abilities.push(currentlySelected);
+      }
     }
 
     return abilities;
