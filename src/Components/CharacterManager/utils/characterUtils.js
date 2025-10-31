@@ -47,7 +47,8 @@ export const getAllSelectedFeats = (character) => {
 };
 
 export const handleASIChoiceChange = (character, level, choiceType) => {
-  const asiKey = character.asi_choices ? 'asi_choices' : 'asiChoices';
+  // Determine which key format the character uses, defaulting to snake_case (database format)
+  const asiKey = character.asiChoices && !character.asi_choices ? 'asiChoices' : 'asi_choices';
   const existingChoices = character[asiKey] || {};
 
   const updatedAsiChoices = {
@@ -81,7 +82,8 @@ export const handleASIFeatChange = (
   featName,
   featChoices = {}
 ) => {
-  const asiKey = character.asi_choices ? 'asi_choices' : 'asiChoices';
+  // Determine which key format the character uses, defaulting to snake_case (database format)
+  const asiKey = character.asiChoices && !character.asi_choices ? 'asiChoices' : 'asi_choices';
   const existingChoices = character[asiKey] || {};
 
   if (featName) {
@@ -109,11 +111,16 @@ export const handleASIFeatChange = (
 
   const updatedAsiChoices = {
     ...existingChoices,
-    [level]: {
+    [level]: featName ? {
       ...existingChoices?.[level],
       type: "feat",
       selectedFeat: featName,
       featChoices: featChoices,
+      abilityScoreIncreases: null,
+    } : {
+      type: null,
+      selectedFeat: null,
+      featChoices: {},
       abilityScoreIncreases: null,
     },
   };
@@ -125,7 +132,8 @@ export const handleASIFeatChange = (
 };
 
 export const handleASIAbilityChange = (character, level, abilityUpdates) => {
-  const asiKey = character.asi_choices ? 'asi_choices' : 'asiChoices';
+  // Determine which key format the character uses, defaulting to snake_case (database format)
+  const asiKey = character.asiChoices && !character.asi_choices ? 'asiChoices' : 'asi_choices';
   const existingChoices = character[asiKey] || {};
 
   const updatedAsiChoices = {
