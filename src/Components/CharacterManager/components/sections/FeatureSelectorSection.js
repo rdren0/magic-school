@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { standardFeats } from "../../../../SharedData/standardFeatData";
-import { getAllSelectedFeats } from "../../utils/characterUtils";
+import { getAllSelectedFeats, calculateFinalAbilityScores } from "../../utils/characterUtils";
 
 const FeatureSelectorSection = ({
   character,
@@ -858,22 +858,26 @@ const FeatureSelectorSection = ({
 
                 {isSelected && hasChoices && (
                   <div style={enhancedStyles.featChoicesContainer}>
-                    {abilityChoices.length > 0 && (
-                      <div style={enhancedStyles.choiceSection}>
-                        <div style={enhancedStyles.choiceSectionTitle}>
-                          Choose your ability score increase:
-                        </div>
-                        <div style={enhancedStyles.choiceGroup}>
-                          {abilityChoices.map((ability) => {
-                            const instanceKey = getCurrentInstanceKey(
-                              feat.name,
-                              character
-                            );
-                            const choiceKey = `${instanceKey}_abilityChoice`;
-                            const currentChoice = featChoices[choiceKey];
-                            const currentScore = character.abilityScores?.[ability] || 10;
-                            const newScore = currentScore + 1;
-                            const exceedsMax = newScore > 20;
+                    {abilityChoices.length > 0 && (() => {
+                      // Calculate the final ability scores including all modifiers
+                      const finalAbilityScores = calculateFinalAbilityScores(character);
+
+                      return (
+                        <div style={enhancedStyles.choiceSection}>
+                          <div style={enhancedStyles.choiceSectionTitle}>
+                            Choose your ability score increase:
+                          </div>
+                          <div style={enhancedStyles.choiceGroup}>
+                            {abilityChoices.map((ability) => {
+                              const instanceKey = getCurrentInstanceKey(
+                                feat.name,
+                                character
+                              );
+                              const choiceKey = `${instanceKey}_abilityChoice`;
+                              const currentChoice = featChoices[choiceKey];
+                              const currentScore = finalAbilityScores[ability] || 10;
+                              const newScore = currentScore + 1;
+                              const exceedsMax = newScore > 20;
 
                             return (
                               <label
@@ -931,11 +935,12 @@ const FeatureSelectorSection = ({
                                   )}
                                 </div>
                               </label>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {skillChoices.map((choice) => (
                       <div key={choice.id} style={enhancedStyles.choiceSection}>

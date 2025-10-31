@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { standardFeats } from "../../../../SharedData/standardFeatData";
+import { calculateFinalAbilityScores } from "../../utils/characterUtils";
 
 const AdditionalFeatsASISection = ({
   character,
@@ -249,11 +250,15 @@ const AdditionalFeatsASISection = ({
                   >
                     Feats:
                   </div>
-                  {additionalFeats.map((featName, index) => {
-                    const feat = standardFeats.find((f) => f.name === featName);
-                    const requiredChoices = getRequiredChoices(feat);
-                    const featChoicesData =
-                      character.featChoices || character.feat_choices || {};
+                  {(() => {
+                    // Calculate final ability scores once for all feats
+                    const finalAbilityScores = calculateFinalAbilityScores(character);
+
+                    return additionalFeats.map((featName, index) => {
+                      const feat = standardFeats.find((f) => f.name === featName);
+                      const requiredChoices = getRequiredChoices(feat);
+                      const featChoicesData =
+                        character.featChoices || character.feat_choices || {};
 
                     return (
                       <div
@@ -334,7 +339,7 @@ const AdditionalFeatsASISection = ({
                                     // Check if this is an ability score choice
                                     const isAbilityChoice = choice.type === "ability";
                                     const abilityKey = option.toLowerCase();
-                                    const currentScore = isAbilityChoice ? (character.abilityScores?.[abilityKey] || 10) : null;
+                                    const currentScore = isAbilityChoice ? (finalAbilityScores[abilityKey] || 10) : null;
                                     const newScore = isAbilityChoice ? currentScore + 1 : null;
                                     const exceedsMax = isAbilityChoice && newScore > 20;
 
@@ -424,7 +429,8 @@ const AdditionalFeatsASISection = ({
                         )}
                       </div>
                     );
-                  })}
+                    });
+                  })()}
                 </div>
               )}
 
