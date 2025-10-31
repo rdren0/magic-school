@@ -41,11 +41,19 @@ const AdditionalFeatsASISection = ({
 
     if (feat.benefits.abilityScoreIncrease) {
       const increase = feat.benefits.abilityScoreIncrease;
-      if (increase.type === "choice" && increase.abilities) {
+      if ((increase.type === "choice" || increase.type === "choice_any") && (increase.abilities || increase.options || increase.choices)) {
+        const abilityOptions = increase.abilities || increase.options || increase.choices || [
+          "strength",
+          "dexterity",
+          "constitution",
+          "intelligence",
+          "wisdom",
+          "charisma",
+        ];
         choices.push({
           type: "ability",
           label: "Ability Score",
-          options: increase.abilities.map(
+          options: abilityOptions.map(
             (a) => a.charAt(0).toUpperCase() + a.slice(1)
           ),
           id: `${feat.name}_ability_0`,
@@ -98,6 +106,12 @@ const AdditionalFeatsASISection = ({
       ...(character.featChoices || character.feat_choices || {}),
       [choiceId]: normalizedValue,
     };
+
+    // Also set the _abilityChoice key for consistency with ASI feat processing
+    if (choiceId.includes("_ability_0")) {
+      const baseKey = choiceId.replace("_ability_0", "");
+      newFeatChoices[`${baseKey}_abilityChoice`] = normalizedValue;
+    }
 
     onChange("featChoices", newFeatChoices);
   };
