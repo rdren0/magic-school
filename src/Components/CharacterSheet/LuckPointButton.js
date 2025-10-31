@@ -28,7 +28,6 @@ const LuckPointButton = ({
 
   if (!character) return null;
 
-  // Use the comprehensive feat benefits calculator to check for luck points
   const featBenefits = calculateFeatBenefits(character);
   const maxLuckPoints = featBenefits.resources.luckPoints;
 

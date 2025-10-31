@@ -14,7 +14,13 @@ const getBreakdown = (knuts) => {
   return { galleons, sickles, knuts: finalKnuts };
 };
 
-const Bank = ({ user, selectedCharacter, supabase, adminMode, displayOnly = false }) => {
+const Bank = ({
+  user,
+  selectedCharacter,
+  supabase,
+  adminMode,
+  displayOnly = false,
+}) => {
   const { theme } = useTheme();
 
   const [totalKnuts, setTotalKnuts] = useState(0);
@@ -168,21 +174,45 @@ const Bank = ({ user, selectedCharacter, supabase, adminMode, displayOnly = fals
   const hasInput = inputGalleons || inputSickles || inputKnuts;
   const { galleons, sickles, knuts } = getBreakdown(totalKnuts);
 
-  // Display-only mode for header preview
   if (displayOnly) {
     if (isLoading) {
-      return <div style={{ fontSize: "12px", color: theme.textSecondary }}>Loading...</div>;
+      return (
+        <div style={{ fontSize: "12px", color: theme.textSecondary }}>
+          Loading...
+        </div>
+      );
     }
     return (
-      <div style={{ display: "flex", gap: "20px", alignItems: "center", fontSize: "18px" }}>
-        <span>🥇 Galleons: <strong style={{ fontWeight: "700", color: theme.text }}>{galleons}</strong></span>
-        <span>🥈 Sickles: <strong style={{ fontWeight: "700", color: theme.text }}>{sickles}</strong></span>
-        <span>🥉 Knuts: <strong style={{ fontWeight: "700", color: theme.text }}>{knuts}</strong></span>
+      <div
+        style={{
+          display: "flex",
+          gap: "20px",
+          alignItems: "center",
+          fontSize: "18px",
+        }}
+      >
+        <span>
+          🥇 Galleons:{" "}
+          <strong style={{ fontWeight: "700", color: theme.text }}>
+            {galleons}
+          </strong>
+        </span>
+        <span>
+          🥈 Sickles:{" "}
+          <strong style={{ fontWeight: "700", color: theme.text }}>
+            {sickles}
+          </strong>
+        </span>
+        <span>
+          🥉 Knuts:{" "}
+          <strong style={{ fontWeight: "700", color: theme.text }}>
+            {knuts}
+          </strong>
+        </span>
       </div>
     );
   }
 
-  // Early returns for edge cases
   if (!user || !discordUserId) {
     return (
       <div style={styles.container(theme)}>

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { standardFeats } from "../../../../SharedData/standardFeatData";
-import { calculateFinalAbilityScores } from "../../utils/characterUtils";
+import { calculateFinalAbilityScores, getResilientAbilityChoices } from "../../utils/characterUtils";
 
 const AdditionalFeatsASISection = ({
   character,
@@ -35,7 +35,26 @@ const AdditionalFeatsASISection = ({
     });
   }, [featFilter]);
 
-  const getRequiredChoices = (feat) => {
+  const getBaseSavingThrowProficiencies = () => {
+    const castingStyle = character.casting_style || character.castingStyle;
+    const savingThrows = [];
+
+    // Casting style saving throws (from data.js)
+    const castingStyleMap = {
+      "Technique Caster": ["dexterity", "wisdom"],
+      "Scholarly Caster": ["wisdom", "intelligence"],
+      "Primal Caster": ["constitution", "strength"],
+      "Natural Caster": ["constitution", "charisma"],
+    };
+
+    if (castingStyle && castingStyleMap[castingStyle]) {
+      savingThrows.push(...castingStyleMap[castingStyle]);
+    }
+
+    return savingThrows;
+  };
+
+  const getRequiredChoices = (feat, featIndex = null) => {
     if (!feat || !feat.benefits) return [];
 
     const choices = [];
@@ -43,14 +62,44 @@ const AdditionalFeatsASISection = ({
     if (feat.benefits.abilityScoreIncrease) {
       const increase = feat.benefits.abilityScoreIncrease;
       if (increase.type === "choice" || increase.type === "choice_any") {
-        const abilityOptions = increase.abilities || increase.options || increase.choices || [
-          "strength",
-          "dexterity",
-          "constitution",
-          "intelligence",
-          "wisdom",
-          "charisma",
-        ];
+        let abilityOptions = increase.abilities ||
+          increase.options ||
+          increase.choices || [
+            "strength",
+            "dexterity",
+            "constitution",
+            "intelligence",
+            "wisdom",
+            "charisma",
+          ];
+
+        // Filter for Resilient feat
+        if (feat.name === "Resilient") {
+          // Get base saving throw proficiencies
+          const baseSavingThrows = getBaseSavingThrowProficiencies();
+
+          // Calculate current instance key for this Resilient feat
+          let currentInstanceKey = "Resilient";
+          if (featIndex !== null) {
+            // Count how many Resilient feats appear before this index
+            const resilientCountBefore = additionalFeats
+              .slice(0, featIndex)
+              .filter(f => f === "Resilient").length;
+            currentInstanceKey = resilientCountBefore === 0
+              ? "Resilient"
+              : `Resilient_additional_${resilientCountBefore}`;
+          }
+
+          // Get previously selected Resilient abilities (excluding current instance)
+          const selectedResilientAbilities = getResilientAbilityChoices(character, currentInstanceKey);
+
+          // Filter out abilities that already have proficiency or were already selected
+          abilityOptions = abilityOptions.filter(ability =>
+            !baseSavingThrows.includes(ability) &&
+            !selectedResilientAbilities.includes(ability)
+          );
+        }
+
         choices.push({
           type: "ability",
           label: "Ability Score",
@@ -108,7 +157,6 @@ const AdditionalFeatsASISection = ({
       [choiceId]: normalizedValue,
     };
 
-    // Also set the _abilityChoice key for consistency with ASI feat processing
     if (choiceId.includes("_ability_0")) {
       const baseKey = choiceId.replace("_ability_0", "");
       newFeatChoices[`${baseKey}_abilityChoice`] = normalizedValue;
@@ -252,17 +300,22 @@ const AdditionalFeatsASISection = ({
                   </div>
                   {additionalFeats.map((featName, index) => {
                     const feat = standardFeats.find((f) => f.name === featName);
-                    const requiredChoices = getRequiredChoices(feat);
+                    const requiredChoices = getRequiredChoices(feat, index);
                     const featChoicesData =
                       character.featChoices || character.feat_choices || {};
 
-                    // Calculate ability scores EXCLUDING the current feat to avoid double-counting
                     const characterWithoutThisFeat = {
                       ...character,
-                      additionalFeats: (character.additionalFeats || []).filter(f => f !== featName),
-                      additional_feats: (character.additional_feats || []).filter(f => f !== featName),
+                      additionalFeats: (character.additionalFeats || []).filter(
+                        (f) => f !== featName
+                      ),
+                      additional_feats: (
+                        character.additional_feats || []
+                      ).filter((f) => f !== featName),
                     };
-                    const finalAbilityScores = calculateFinalAbilityScores(characterWithoutThisFeat);
+                    const finalAbilityScores = calculateFinalAbilityScores(
+                      characterWithoutThisFeat
+                    );
 
                     return (
                       <div
@@ -340,26 +393,37 @@ const AdditionalFeatsASISection = ({
                                       storedValue === option ||
                                       storedValue === option.toLowerCase();
 
-                                    // Check if this is an ability score choice
-                                    const isAbilityChoice = choice.type === "ability";
+                                    const isAbilityChoice =
+                                      choice.type === "ability";
                                     const abilityKey = option.toLowerCase();
-                                    const currentScore = isAbilityChoice ? (finalAbilityScores[abilityKey] || 10) : null;
-                                    const newScore = isAbilityChoice ? currentScore + 1 : null;
-                                    const exceedsMax = isAbilityChoice && newScore > 20;
+                                    const currentScore = isAbilityChoice
+                                      ? finalAbilityScores[abilityKey] || 10
+                                      : null;
+                                    const newScore = isAbilityChoice
+                                      ? currentScore + 1
+                                      : null;
+                                    const exceedsMax =
+                                      isAbilityChoice && newScore > 20;
 
                                     return (
                                       <label
                                         key={option}
                                         style={{
                                           display: "flex",
-                                          flexDirection: isAbilityChoice ? "column" : "row",
-                                          alignItems: isAbilityChoice ? "flex-start" : "center",
-                                          padding: isAbilityChoice ? "8px 12px" : "6px 12px",
+                                          flexDirection: isAbilityChoice
+                                            ? "column"
+                                            : "row",
+                                          alignItems: isAbilityChoice
+                                            ? "flex-start"
+                                            : "center",
+                                          padding: isAbilityChoice
+                                            ? "8px 12px"
+                                            : "6px 12px",
                                           border: `2px solid ${
                                             isSelected
                                               ? theme.primary
                                               : exceedsMax
-                                              ? theme.warning || '#f59e0b'
+                                              ? theme.warning || "#f59e0b"
                                               : theme.border
                                           }`,
                                           borderRadius: "6px",
@@ -379,7 +443,13 @@ const AdditionalFeatsASISection = ({
                                           transition: "all 0.2s ease",
                                         }}
                                       >
-                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                        <div
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            width: "100%",
+                                          }}
+                                        >
                                           <input
                                             type="radio"
                                             name={`${choice.id}_${index}`}
@@ -405,19 +475,24 @@ const AdditionalFeatsASISection = ({
                                           <span>{option}</span>
                                         </div>
                                         {isAbilityChoice && (
-                                          <div style={{
-                                            fontSize: "10px",
-                                            color: theme.textSecondary,
-                                            marginLeft: "22px",
-                                            marginTop: "2px"
-                                          }}>
+                                          <div
+                                            style={{
+                                              fontSize: "10px",
+                                              color: theme.textSecondary,
+                                              marginLeft: "22px",
+                                              marginTop: "2px",
+                                            }}
+                                          >
                                             {currentScore} → {newScore}
                                             {exceedsMax && (
-                                              <span style={{
-                                                color: theme.warning || '#f59e0b',
-                                                fontWeight: '600',
-                                                marginLeft: '4px'
-                                              }}>
+                                              <span
+                                                style={{
+                                                  color:
+                                                    theme.warning || "#f59e0b",
+                                                  fontWeight: "600",
+                                                  marginLeft: "4px",
+                                                }}
+                                              >
                                                 ⚠️ Max is 20
                                               </span>
                                             )}

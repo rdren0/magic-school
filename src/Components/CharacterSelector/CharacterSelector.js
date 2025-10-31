@@ -41,7 +41,6 @@ export const CharacterSelector = ({
   const shouldShowDropdown = characters.length > 1;
   const singleCharacter = characters.length === 1 ? characters[0] : null;
 
-  // Debug: Log character data to help diagnose image issue
   useEffect(() => {
     if (selectedCharacter) {
       console.log("CharacterSelector - selectedCharacter:", {
@@ -55,7 +54,6 @@ export const CharacterSelector = ({
     }
   }, [selectedCharacter]);
 
-  // Debug: Log render state
   useEffect(() => {
     console.log("CharacterSelector - render state:", {
       shouldShowDropdown,
@@ -384,7 +382,6 @@ export const CharacterSelector = ({
       <div style={enhancedStyles.innerContainer}>
         {shouldShowDropdown ? (
           !isDropdownOpen && selectedCharacter ? (
-            // Show selected character display when dropdown is closed
             <div
               onClick={() => setIsDropdownOpen(true)}
               style={{
@@ -545,7 +542,6 @@ export const CharacterSelector = ({
               </div>
             </div>
           ) : (
-            // Show search input when dropdown is open
             <div
               style={enhancedStyles.searchDropdownContainer}
               ref={dropdownRef}

@@ -803,9 +803,6 @@ const CharacterSheet = ({
 
   useEffect(() => {
     fetchCharacterDetails();
-    // Only depend on fetchCharacterDetails - it already includes all necessary dependencies
-    // Having both the callback AND its dependencies is redundant and can cause extra renders
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchCharacterDetails]);
 
   const handleShortRestClick = () => {

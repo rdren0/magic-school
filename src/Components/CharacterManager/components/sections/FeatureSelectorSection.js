@@ -2,7 +2,11 @@ import { useState, useMemo } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
 import { createBackgroundStyles } from "../../../../styles/masterStyles";
 import { standardFeats } from "../../../../SharedData/standardFeatData";
-import { getAllSelectedFeats, calculateFinalAbilityScores } from "../../utils/characterUtils";
+import {
+  getAllSelectedFeats,
+  calculateFinalAbilityScores,
+  getResilientAbilityChoices,
+} from "../../utils/characterUtils";
 
 const FeatureSelectorSection = ({
   character,
@@ -280,6 +284,25 @@ const FeatureSelectorSection = ({
     );
   };
 
+  const getBaseSavingThrowProficiencies = () => {
+    const castingStyle = character.casting_style || character.castingStyle;
+    const savingThrows = [];
+
+    // Casting style saving throws (from data.js)
+    const castingStyleMap = {
+      "Technique Caster": ["dexterity", "wisdom"],
+      "Scholarly Caster": ["wisdom", "intelligence"],
+      "Primal Caster": ["constitution", "strength"],
+      "Natural Caster": ["constitution", "charisma"],
+    };
+
+    if (castingStyle && castingStyleMap[castingStyle]) {
+      savingThrows.push(...castingStyleMap[castingStyle]);
+    }
+
+    return savingThrows;
+  };
+
   const getFeatAbilityChoices = (feat) => {
     if (!feat?.benefits?.abilityScoreIncrease) return [];
     const asiIncrease = feat.benefits.abilityScoreIncrease;
@@ -292,8 +315,7 @@ const FeatureSelectorSection = ({
       return [];
     }
 
-    return (
-      asiIncrease.abilities ||
+    let abilities = asiIncrease.abilities ||
       asiIncrease.options ||
       asiIncrease.choices || [
         "strength",
@@ -302,8 +324,27 @@ const FeatureSelectorSection = ({
         "intelligence",
         "wisdom",
         "charisma",
-      ]
-    );
+      ];
+
+    // Filter for Resilient feat
+    if (feat.name === "Resilient") {
+      // Get base saving throw proficiencies
+      const baseSavingThrows = getBaseSavingThrowProficiencies();
+
+      // Get current instance key to exclude from filtering
+      const currentInstanceKey = contextLevel ? `Resilient_level${contextLevel}` : "Resilient";
+
+      // Get previously selected Resilient abilities (excluding current instance)
+      const selectedResilientAbilities = getResilientAbilityChoices(character, currentInstanceKey);
+
+      // Filter out abilities that already have proficiency or were already selected
+      abilities = abilities.filter(ability =>
+        !baseSavingThrows.includes(ability) &&
+        !selectedResilientAbilities.includes(ability)
+      );
+    }
+
+    return abilities;
   };
 
   const getFeatSkillChoices = (feat) => {
@@ -554,7 +595,6 @@ const FeatureSelectorSection = ({
       };
 
       if (choiceKey.includes("abilityChoice")) {
-        // Extract the instance key from the choiceKey (e.g., "Resilient_level8" from "Resilient_level8_abilityChoice")
         const instanceKey = choiceKey.replace("_abilityChoice", "");
         newChoices[`${instanceKey}_ability_0`] = value;
       }
@@ -858,89 +898,103 @@ const FeatureSelectorSection = ({
 
                 {isSelected && hasChoices && (
                   <div style={enhancedStyles.featChoicesContainer}>
-                    {abilityChoices.length > 0 && (() => {
-                      // Calculate the final ability scores including all modifiers
-                      const finalAbilityScores = calculateFinalAbilityScores(character);
+                    {abilityChoices.length > 0 &&
+                      (() => {
+                        const finalAbilityScores =
+                          calculateFinalAbilityScores(character);
 
-                      return (
-                        <div style={enhancedStyles.choiceSection}>
-                          <div style={enhancedStyles.choiceSectionTitle}>
-                            Choose your ability score increase:
-                          </div>
-                          <div style={enhancedStyles.choiceGroup}>
-                            {abilityChoices.map((ability) => {
-                              const instanceKey = getCurrentInstanceKey(
-                                feat.name,
-                                character
-                              );
-                              const choiceKey = `${instanceKey}_abilityChoice`;
-                              const currentChoice = featChoices[choiceKey];
-                              const currentScore = finalAbilityScores[ability] || 10;
-                              const newScore = currentScore + 1;
-                              const exceedsMax = newScore > 20;
+                        return (
+                          <div style={enhancedStyles.choiceSection}>
+                            <div style={enhancedStyles.choiceSectionTitle}>
+                              Choose your ability score increase:
+                            </div>
+                            <div style={enhancedStyles.choiceGroup}>
+                              {abilityChoices.map((ability) => {
+                                const instanceKey = getCurrentInstanceKey(
+                                  feat.name,
+                                  character
+                                );
+                                const choiceKey = `${instanceKey}_abilityChoice`;
+                                const currentChoice = featChoices[choiceKey];
+                                const currentScore =
+                                  finalAbilityScores[ability] || 10;
+                                const newScore = currentScore + 1;
+                                const exceedsMax = newScore > 20;
 
-                            return (
-                              <label
-                                key={ability}
-                                style={{
-                                  ...enhancedStyles.featChoiceLabel,
-                                  backgroundColor:
-                                    currentChoice === ability
-                                      ? `${theme.primary}20`
-                                      : theme.surface,
-                                  borderColor:
-                                    currentChoice === ability
-                                      ? theme.primary
-                                      : exceedsMax
-                                      ? theme.warning || '#f59e0b'
-                                      : theme.border,
-                                  flexDirection: 'column',
-                                  alignItems: 'flex-start',
-                                  padding: '8px 12px',
-                                }}
-                              >
-                                <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                                  <input
-                                    type="radio"
-                                    name={`${instanceKey}_ability_choice`}
-                                    value={ability}
-                                    checked={currentChoice === ability}
-                                    onChange={(e) =>
-                                      handleFeatChoiceChange(
-                                        feat.name,
-                                        choiceKey,
-                                        e.target.value
-                                      )
-                                    }
-                                    style={enhancedStyles.choiceRadio}
-                                    disabled={disabled}
-                                  />
-                                  <span style={{ fontWeight: '600' }}>{formatChoiceName(ability)}</span>
-                                </div>
-                                <div style={{
-                                  fontSize: '11px',
-                                  color: theme.textSecondary,
-                                  marginLeft: '22px',
-                                  marginTop: '2px'
-                                }}>
-                                  {currentScore} → {newScore}
-                                  {exceedsMax && (
-                                    <span style={{
-                                      color: theme.warning || '#f59e0b',
-                                      fontWeight: '600',
-                                      marginLeft: '4px'
-                                    }}>
-                                      ⚠️ Exceeds max (20)
-                                    </span>
-                                  )}
-                                </div>
-                              </label>
-                              );
-                            })}
+                                return (
+                                  <label
+                                    key={ability}
+                                    style={{
+                                      ...enhancedStyles.featChoiceLabel,
+                                      backgroundColor:
+                                        currentChoice === ability
+                                          ? `${theme.primary}20`
+                                          : theme.surface,
+                                      borderColor:
+                                        currentChoice === ability
+                                          ? theme.primary
+                                          : exceedsMax
+                                          ? theme.warning || "#f59e0b"
+                                          : theme.border,
+                                      flexDirection: "column",
+                                      alignItems: "flex-start",
+                                      padding: "8px 12px",
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        width: "100%",
+                                      }}
+                                    >
+                                      <input
+                                        type="radio"
+                                        name={`${instanceKey}_ability_choice`}
+                                        value={ability}
+                                        checked={currentChoice === ability}
+                                        onChange={(e) =>
+                                          handleFeatChoiceChange(
+                                            feat.name,
+                                            choiceKey,
+                                            e.target.value
+                                          )
+                                        }
+                                        style={enhancedStyles.choiceRadio}
+                                        disabled={disabled}
+                                      />
+                                      <span style={{ fontWeight: "600" }}>
+                                        {formatChoiceName(ability)}
+                                      </span>
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: "11px",
+                                        color: theme.textSecondary,
+                                        marginLeft: "22px",
+                                        marginTop: "2px",
+                                      }}
+                                    >
+                                      {currentScore} → {newScore}
+                                      {exceedsMax && (
+                                        <span
+                                          style={{
+                                            color: theme.warning || "#f59e0b",
+                                            fontWeight: "600",
+                                            marginLeft: "4px",
+                                          }}
+                                        >
+                                          ⚠️ Exceeds max (20)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </label>
+                                );
+                              })}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })()}
+                        );
+                      })()}
 
                     {skillChoices.map((choice) => (
                       <div key={choice.id} style={enhancedStyles.choiceSection}>

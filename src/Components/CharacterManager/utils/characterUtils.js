@@ -46,8 +46,59 @@ export const getAllSelectedFeats = (character) => {
   return [...new Set(selectedFeats)];
 };
 
+export const getResilientAbilityChoices = (character, excludeInstanceKey = null) => {
+  const selectedAbilities = [];
+  const featChoices = character.featChoices || character.feat_choices || {};
+
+  // Check level 1 standard feat
+  const level1Key = "Resilient_level1";
+  if (
+    character.level1ChoiceType === "feat" &&
+    character.standardFeats?.includes("Resilient") &&
+    level1Key !== excludeInstanceKey
+  ) {
+    const ability =
+      featChoices["Resilient_level1_abilityChoice"] ||
+      featChoices["Resilient_level1_ability_0"] ||
+      featChoices["Resilient_levellevel1_abilityChoice"];
+    if (ability) selectedAbilities.push(ability);
+  }
+
+  // Check ASI choices
+  const asiChoices = character.asiChoices || character.asi_choices;
+  if (asiChoices) {
+    Object.entries(asiChoices).forEach(([level, choice]) => {
+      if (choice.type === "feat" && choice.selectedFeat === "Resilient") {
+        const instanceKey = `Resilient_level${level}`;
+        if (instanceKey !== excludeInstanceKey) {
+          const mergedChoices = { ...featChoices, ...(choice.featChoices || choice.feat_choices || {}) };
+          const ability =
+            mergedChoices[`${instanceKey}_abilityChoice`] ||
+            mergedChoices[`${instanceKey}_ability_0`];
+          if (ability) selectedAbilities.push(ability);
+        }
+      }
+    });
+  }
+
+  // Check additional feats
+  const additionalFeats = character.additionalFeats || character.additional_feats || [];
+  const resilientCount = additionalFeats.filter(f => f === "Resilient").length;
+
+  for (let i = 0; i < resilientCount; i++) {
+    const instanceKey = i === 0 ? "Resilient" : `Resilient_additional_${i}`;
+    if (instanceKey !== excludeInstanceKey) {
+      const ability =
+        featChoices[`${instanceKey}_abilityChoice`] ||
+        featChoices[`${instanceKey}_ability_0`];
+      if (ability) selectedAbilities.push(ability);
+    }
+  }
+
+  return selectedAbilities;
+};
+
 export const handleASIChoiceChange = (character, level, choiceType) => {
-  // Determine which key format the character uses, defaulting to snake_case (database format)
   const asiKey =
     character.asiChoices && !character.asi_choices
       ? "asiChoices"
@@ -85,7 +136,6 @@ export const handleASIFeatChange = (
   featName,
   featChoices = {}
 ) => {
-  // Determine which key format the character uses, defaulting to snake_case (database format)
   const asiKey =
     character.asiChoices && !character.asi_choices
       ? "asiChoices"
@@ -140,7 +190,6 @@ export const handleASIFeatChange = (
 };
 
 export const handleASIAbilityChange = (character, level, abilityUpdates) => {
-  // Determine which key format the character uses, defaulting to snake_case (database format)
   const asiKey =
     character.asiChoices && !character.asi_choices
       ? "asiChoices"
@@ -181,12 +230,20 @@ export const calculateFinalAbilityScores = (character) => {
 
   const finalScores = {};
 
-  const featChoices = { ...(character.featChoices || character.feat_choices || {}) };
+  const featChoices = {
+    ...(character.featChoices || character.feat_choices || {}),
+  };
   const asiChoices = character.asiChoices || character.asi_choices;
   if (asiChoices) {
     Object.values(asiChoices).forEach((choice) => {
-      if (choice.type === "feat" && (choice.featChoices || choice.feat_choices)) {
-        Object.assign(featChoices, choice.featChoices || choice.feat_choices || {});
+      if (
+        choice.type === "feat" &&
+        (choice.featChoices || choice.feat_choices)
+      ) {
+        Object.assign(
+          featChoices,
+          choice.featChoices || choice.feat_choices || {}
+        );
       }
     });
   }
@@ -617,7 +674,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
 
   const uniqueFeats = [...new Set(allSelectedFeats)];
 
-  // Process each unique feat
   uniqueFeats.forEach((featName) => {
     const feat = standardFeats.find((f) => f.name === featName);
 
@@ -627,11 +683,9 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
 
     const increase = feat.benefits.abilityScoreIncrease;
 
-    // For repeatable feats, we need to process each instance separately
     if (feat.repeatable) {
       let instancesProcessed = 0;
 
-      // Process ASI instances
       const asiChoices = character.asiChoices || character.asi_choices;
       if (asiChoices) {
         Object.entries(asiChoices).forEach(([level, choice]) => {
@@ -656,7 +710,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
         });
       }
 
-      // Process level 1 standard feat instance
       if (
         character.level1ChoiceType === "feat" &&
         character.standardFeats &&
@@ -675,7 +728,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
         instancesProcessed++;
       }
 
-      // Process additional feat instances
       const additionalFeats =
         character.additionalFeats || character.additional_feats || [];
       const additionalFeatCount = additionalFeats.filter(
@@ -696,7 +748,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
         instancesProcessed++;
       }
     } else {
-      // Non-repeatable feat
       processFeatAbilityIncrease(
         feat,
         increase,
@@ -712,7 +763,6 @@ export const calculateFeatModifiers = (character, featChoices = {}) => {
   return { modifiers, featDetails };
 };
 
-// Helper function to process ability increase for a feat instance
 const processFeatAbilityIncrease = (
   feat,
   increase,
@@ -727,7 +777,7 @@ const processFeatAbilityIncrease = (
   const choiceKey1 = `${featKey}_abilityChoice`;
   const choiceKey2 = `${featKey}_ability_0`;
   const choiceKey3 = `${featKey}_ability`;
-  // Fallback for corrupted keys from old bug (e.g., "Resilient_levellevel1")
+
   const choiceKey4 =
     featKey === `${feat.name}_level1`
       ? `${feat.name}_levellevel1_abilityChoice`
