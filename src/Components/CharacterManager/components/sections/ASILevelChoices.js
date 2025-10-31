@@ -471,25 +471,33 @@ const FeatSelectionSection = ({
   };
 
   const handleMockCharacterUpdate = (updater) => {
+    const processUpdate = (updated) => {
+      const selectedFeats = updated.standardFeats || [];
+      const allFeatChoices = updated.featChoices || {};
+
+      // Filter feat choices to only include those for this specific level
+      // For ASI levels, choices are keyed as {FeatName}_level{N}_{choiceType}
+      const levelPrefix = `_level${level}_`;
+      const levelFeatChoices = {};
+
+      Object.keys(allFeatChoices).forEach((key) => {
+        if (key.includes(levelPrefix)) {
+          levelFeatChoices[key] = allFeatChoices[key];
+        }
+      });
+
+      if (selectedFeats.length > 0) {
+        onFeatChange(level, selectedFeats[0], levelFeatChoices);
+      } else {
+        onFeatChange(level, null, {});
+      }
+    };
+
     if (typeof updater === "function") {
       const updated = updater(mockCharacter);
-      const selectedFeats = updated.standardFeats || [];
-      const featChoices = updated.featChoices || {};
-
-      if (selectedFeats.length > 0) {
-        onFeatChange(level, selectedFeats[0], featChoices);
-      } else {
-        onFeatChange(level, null, {});
-      }
+      processUpdate(updated);
     } else {
-      const selectedFeats = updater.standardFeats || [];
-      const featChoices = updater.featChoices || {};
-
-      if (selectedFeats.length > 0) {
-        onFeatChange(level, selectedFeats[0], featChoices);
-      } else {
-        onFeatChange(level, null, {});
-      }
+      processUpdate(updater);
     }
   };
 
