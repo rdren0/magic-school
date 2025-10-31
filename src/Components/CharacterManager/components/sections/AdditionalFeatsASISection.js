@@ -330,16 +330,27 @@ const AdditionalFeatsASISection = ({
                                     const isSelected =
                                       storedValue === option ||
                                       storedValue === option.toLowerCase();
+
+                                    // Check if this is an ability score choice
+                                    const isAbilityChoice = choice.type === "ability";
+                                    const abilityKey = option.toLowerCase();
+                                    const currentScore = isAbilityChoice ? (character.abilityScores?.[abilityKey] || 10) : null;
+                                    const newScore = isAbilityChoice ? currentScore + 1 : null;
+                                    const exceedsMax = isAbilityChoice && newScore > 20;
+
                                     return (
                                       <label
                                         key={option}
                                         style={{
                                           display: "flex",
-                                          alignItems: "center",
-                                          padding: "6px 12px",
+                                          flexDirection: isAbilityChoice ? "column" : "row",
+                                          alignItems: isAbilityChoice ? "flex-start" : "center",
+                                          padding: isAbilityChoice ? "8px 12px" : "6px 12px",
                                           border: `2px solid ${
                                             isSelected
                                               ? theme.primary
+                                              : exceedsMax
+                                              ? theme.warning || '#f59e0b'
                                               : theme.border
                                           }`,
                                           borderRadius: "6px",
@@ -359,29 +370,50 @@ const AdditionalFeatsASISection = ({
                                           transition: "all 0.2s ease",
                                         }}
                                       >
-                                        <input
-                                          type="radio"
-                                          name={`${choice.id}_${index}`}
-                                          value={option}
-                                          checked={isSelected}
-                                          onChange={() =>
-                                            !disabled &&
-                                            updateFeatChoice(
-                                              featName,
-                                              choice.id,
-                                              option
-                                            )
-                                          }
-                                          disabled={disabled}
-                                          style={{
-                                            marginRight: "6px",
-                                            accentColor: theme.primary,
-                                            cursor: disabled
-                                              ? "not-allowed"
-                                              : "pointer",
-                                          }}
-                                        />
-                                        {option}
+                                        <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+                                          <input
+                                            type="radio"
+                                            name={`${choice.id}_${index}`}
+                                            value={option}
+                                            checked={isSelected}
+                                            onChange={() =>
+                                              !disabled &&
+                                              updateFeatChoice(
+                                                featName,
+                                                choice.id,
+                                                option
+                                              )
+                                            }
+                                            disabled={disabled}
+                                            style={{
+                                              marginRight: "6px",
+                                              accentColor: theme.primary,
+                                              cursor: disabled
+                                                ? "not-allowed"
+                                                : "pointer",
+                                            }}
+                                          />
+                                          <span>{option}</span>
+                                        </div>
+                                        {isAbilityChoice && (
+                                          <div style={{
+                                            fontSize: "10px",
+                                            color: theme.textSecondary,
+                                            marginLeft: "22px",
+                                            marginTop: "2px"
+                                          }}>
+                                            {currentScore} → {newScore}
+                                            {exceedsMax && (
+                                              <span style={{
+                                                color: theme.warning || '#f59e0b',
+                                                fontWeight: '600',
+                                                marginLeft: '4px'
+                                              }}>
+                                                ⚠️ Max is 20
+                                              </span>
+                                            )}
+                                          </div>
+                                        )}
                                       </label>
                                     );
                                   })}

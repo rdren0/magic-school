@@ -871,6 +871,9 @@ const FeatureSelectorSection = ({
                             );
                             const choiceKey = `${instanceKey}_abilityChoice`;
                             const currentChoice = featChoices[choiceKey];
+                            const currentScore = character.abilityScores?.[ability] || 10;
+                            const newScore = currentScore + 1;
+                            const exceedsMax = newScore > 20;
 
                             return (
                               <label
@@ -884,25 +887,49 @@ const FeatureSelectorSection = ({
                                   borderColor:
                                     currentChoice === ability
                                       ? theme.primary
+                                      : exceedsMax
+                                      ? theme.warning || '#f59e0b'
                                       : theme.border,
+                                  flexDirection: 'column',
+                                  alignItems: 'flex-start',
+                                  padding: '8px 12px',
                                 }}
                               >
-                                <input
-                                  type="radio"
-                                  name={`${instanceKey}_ability_choice`}
-                                  value={ability}
-                                  checked={currentChoice === ability}
-                                  onChange={(e) =>
-                                    handleFeatChoiceChange(
-                                      feat.name,
-                                      choiceKey,
-                                      e.target.value
-                                    )
-                                  }
-                                  style={enhancedStyles.choiceRadio}
-                                  disabled={disabled}
-                                />
-                                <span>{formatChoiceName(ability)} (+1)</span>
+                                <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                  <input
+                                    type="radio"
+                                    name={`${instanceKey}_ability_choice`}
+                                    value={ability}
+                                    checked={currentChoice === ability}
+                                    onChange={(e) =>
+                                      handleFeatChoiceChange(
+                                        feat.name,
+                                        choiceKey,
+                                        e.target.value
+                                      )
+                                    }
+                                    style={enhancedStyles.choiceRadio}
+                                    disabled={disabled}
+                                  />
+                                  <span style={{ fontWeight: '600' }}>{formatChoiceName(ability)}</span>
+                                </div>
+                                <div style={{
+                                  fontSize: '11px',
+                                  color: theme.textSecondary,
+                                  marginLeft: '22px',
+                                  marginTop: '2px'
+                                }}>
+                                  {currentScore} → {newScore}
+                                  {exceedsMax && (
+                                    <span style={{
+                                      color: theme.warning || '#f59e0b',
+                                      fontWeight: '600',
+                                      marginLeft: '4px'
+                                    }}>
+                                      ⚠️ Exceeds max (20)
+                                    </span>
+                                  )}
+                                </div>
                               </label>
                             );
                           })}
