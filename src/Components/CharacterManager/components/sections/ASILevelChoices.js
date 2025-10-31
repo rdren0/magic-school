@@ -442,14 +442,30 @@ const FeatSelectionSection = ({
   setFeatFilter,
   disabled,
 }) => {
+  // Keep ASI choices from other levels for filtering (e.g., Resilient feat)
+  const realAsiChoices = character.asiChoices || character.asi_choices || {};
+  const otherLevelAsiChoices = Object.fromEntries(
+    Object.entries(realAsiChoices).filter(([asiLevel]) => parseInt(asiLevel) !== level)
+  );
+
+  // Merge global feat choices with current level's choices for proper filtering
+  const globalFeatChoices = character.featChoices || character.feat_choices || {};
+  const mergedFeatChoices = {
+    ...globalFeatChoices,
+    ...(choice.featChoices || {}),
+  };
+
   const mockCharacter = {
     ...character,
 
     standardFeats: choice.selectedFeat ? [choice.selectedFeat] : [],
 
-    featChoices: choice.featChoices || {},
+    featChoices: mergedFeatChoices,
+    feat_choices: mergedFeatChoices,
 
-    asiChoices: {},
+    // Include ASI choices from other levels so feat filtering can see them
+    asiChoices: otherLevelAsiChoices,
+    asi_choices: otherLevelAsiChoices,
 
     _editingASILevel: level,
   };
