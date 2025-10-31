@@ -42,7 +42,7 @@ const AdditionalFeatsASISection = ({
 
     if (feat.benefits.abilityScoreIncrease) {
       const increase = feat.benefits.abilityScoreIncrease;
-      if ((increase.type === "choice" || increase.type === "choice_any") && (increase.abilities || increase.options || increase.choices)) {
+      if (increase.type === "choice" || increase.type === "choice_any") {
         const abilityOptions = increase.abilities || increase.options || increase.choices || [
           "strength",
           "dexterity",
