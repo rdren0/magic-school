@@ -169,10 +169,7 @@ const PotionBrewingSystem = ({ character, supabase, user }) => {
       return total;
     }
   }, [
-    currentCharacter?.level,
-    currentCharacter?.abilityScores,
-    currentCharacter?.skillProficiencies,
-    currentCharacter?.skillExpertise,
+    currentCharacter,
     hasHealingSubclass,
     healingSkillChoice,
     getMedicineSkillProficiencyInfo,
