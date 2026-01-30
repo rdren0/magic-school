@@ -22,8 +22,6 @@ import Creatures from "../Components/Creatures/Creatures";
 import ThemeSettings from "../Components/ThemeSettings/ThemeSettings";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
 import { RollModalProvider } from "../Components/utils/diceRoller";
-import HelpResources from "../Components/HelpResources/HelpResources";
-
 import { createAppStyles } from "../utils/styles/masterStyles";
 import PotionBrewingSystem from "../Components/Potions/Potions";
 import Inventory from "../Components/Inventory/Inventory";
@@ -370,12 +368,6 @@ const Navigation = ({ characters }) => {
         key: "character",
       });
     }
-
-    baseTabs.push({
-      path: "/help-resources",
-      label: "Help & Resources",
-      key: "help-resources",
-    });
 
     if (adminMode) {
       return [
@@ -1475,7 +1467,6 @@ function AppContent() {
               }
             />
             <Route path="/theme-settings" element={<ThemeSettings />} />
-            <Route path="/help-resources" element={<HelpResources />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
