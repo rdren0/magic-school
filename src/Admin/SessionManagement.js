@@ -562,33 +562,11 @@ const SessionManagement = ({ supabase }) => {
           >
             <option value="all">All Sessions</option>
 
-            <optgroup label="Haunting Sessions">
-              {gameSessionGroups.haunting.map((session) => (
-                <option key={session} value={session}>
-                  {session}
-                </option>
-              ))}
-            </optgroup>
-
-            <option disabled>──────────</option>
-
-            <optgroup label="Knights Sessions">
-              {gameSessionGroups.knights.map((session) => (
-                <option key={session} value={session}>
-                  {session}
-                </option>
-              ))}
-            </optgroup>
-
-            <option disabled>──────────</option>
-
-            <optgroup label="Other Sessions">
-              {gameSessionGroups.other.map((session) => (
-                <option key={session} value={session}>
-                  {session}
-                </option>
-              ))}
-            </optgroup>
+            {gameSessionGroups.campaign.map((session) => (
+              <option key={session} value={session}>
+                {session}
+              </option>
+            ))}
 
             <option disabled>──────────</option>
 
