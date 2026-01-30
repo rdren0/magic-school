@@ -390,7 +390,7 @@ const Navigation = ({ characters, user }) => {
           src={logo}
           alt="College of Magic Logo"
           style={{
-            height: "60px",
+            height: "80px",
             width: "auto",
             transition: "opacity 0.2s ease",
             marginRight: "16px",
