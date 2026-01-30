@@ -4757,6 +4757,9 @@ export const subclassesData = {
               "Gain Fraudemo spell, cast wandless and wordless, creating both sound and image with one casting. At 6th level, gain Fraudemo Maxima and can change illusion nature with an action if you can see it.",
             benefits: {
               spells: ["Fraudemo (wandless/wordless)"],
+              spellsByLevel: {
+                6: ["Fraudemo Maxima"],
+              },
               specialAbilities: [
                 {
                   name: "Enhanced Illusions",
@@ -4771,9 +4774,6 @@ export const subclassesData = {
                   description: "Change illusion nature if you can see it",
                 },
               ],
-              spells: {
-                6: ["Fraudemo Maxima"],
-              },
             },
           },
         ],
