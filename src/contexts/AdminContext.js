@@ -45,7 +45,7 @@ export const AdminProvider = ({ children, user }) => {
     [searchParams, setSearchParams] = useSearchParams();
   } catch (error) {
     console.warn(
-      "useSearchParams not available, admin mode URL persistence disabled"
+      "useSearchParams not available, admin mode URL persistence disabled",
     );
     searchParams = new URLSearchParams();
     setSearchParams = () => {};
@@ -80,7 +80,7 @@ export const AdminProvider = ({ children, user }) => {
           } catch (error) {
             console.warn(
               "Failed to clear admin mode from session storage:",
-              error
+              error,
             );
           }
 
@@ -104,7 +104,7 @@ export const AdminProvider = ({ children, user }) => {
         } catch (storageError) {
           console.warn(
             "Failed to clear admin mode from session storage:",
-            storageError
+            storageError,
           );
         }
       } finally {
@@ -141,11 +141,6 @@ export const AdminProvider = ({ children, user }) => {
 
   const setAdminMode = useCallback(
     (isActive) => {
-      if (!isUserAdmin) {
-        console.warn("Cannot set admin mode: user is not an admin");
-        return;
-      }
-
       setAdminModeState(isActive);
 
       try {
@@ -172,7 +167,7 @@ export const AdminProvider = ({ children, user }) => {
         }
       }
     },
-    [isUserAdmin, setAdminModeState, setSearchParams, searchParams]
+    [setAdminModeState, setSearchParams, searchParams],
   );
 
   useEffect(() => {
@@ -191,7 +186,7 @@ export const AdminProvider = ({ children, user }) => {
       } catch (error) {
         console.warn(
           "Failed to restore admin mode from session storage:",
-          error
+          error,
         );
       }
     }
@@ -234,7 +229,7 @@ export const AdminProvider = ({ children, user }) => {
       });
 
       const usersArray = Array.from(userMap.values()).sort((a, b) =>
-        a.displayName.localeCompare(b.displayName)
+        a.displayName.localeCompare(b.displayName),
       );
 
       setAllUsers(usersArray);

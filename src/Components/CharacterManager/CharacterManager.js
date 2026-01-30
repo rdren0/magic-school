@@ -331,7 +331,7 @@ const CharacterManager = ({
               marginBottom: "8px",
             }}
           >
-            Welcome to Your W&S Character Manager
+            Welcome to Your Character Manager
           </h1>
           <p
             style={{

@@ -3433,7 +3433,7 @@ export const rollLuckPoint = async ({
       color: ROLL_COLORS.levelup,
       fields: fields,
       footer: {
-        text: `${characterName} - Witches and Snitches`,
+        text: `${characterName} - College of Magic`,
       },
       timestamp: new Date().toISOString(),
     };

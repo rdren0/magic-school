@@ -1429,20 +1429,6 @@ const DowntimeWrapper = ({
 
   return (
     <div style={styles.container}>
-      {adminMode && selectedCharacter && (
-        <div style={styles.adminBreadcrumb}>
-          <Shield size={16} />
-          <span>Admin Mode</span>
-          <span>•</span>
-          <span>Viewing: {selectedCharacter.name}</span>
-          <button
-            onClick={() => window.close()}
-            style={styles.backToAdminButton}
-          >
-            ← Back to Admin Panel
-          </button>
-        </div>
-      )}
 
       <div style={styles.header}>
         <h1 style={styles.title}>Downtime Management</h1>

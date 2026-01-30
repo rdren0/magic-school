@@ -32,13 +32,12 @@ import { FeatsProvider } from "../contexts/FeatsContext";
 import { SpellsProvider } from "../contexts/SpellsContext";
 import AdminDashboard from "../Admin/AdminDashboard";
 import RecipeCookingSystem from "../Components/Recipes/RecipeCookingSystem";
-import AdminPasswordModal from "../Admin/AdminPasswordModal";
 import { LOCAL_HOST, RULE_BOOK_URL, WEBSITE } from "./const";
 import DowntimeWrapper from "../Components/Downtime/DowntimeWrapper";
 import "./App.css";
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
-  process.env.REACT_APP_SUPABASE_ANON_KEY
+  process.env.REACT_APP_SUPABASE_ANON_KEY,
 );
 
 const isLocalhost = window.location.hostname === "localhost";
@@ -207,57 +206,20 @@ const AuthComponent = ({
   onAdminToggleClick,
 }) => {
   const { theme } = useTheme();
-  const { isUserAdmin, adminMode } = useAdmin();
+  const { adminMode } = useAdmin();
   const styles = createAppStyles(theme);
   const navigate = useNavigate();
 
   if (user) {
     return (
       <div style={styles.authSection}>
-        {(isUserAdmin || true) && (
+        {!adminMode && (
           <button
             onClick={onAdminToggleClick}
-            style={{
-              ...styles.themeButton,
-              backgroundColor: adminMode ? "#ffd700" : theme.surface,
-              color: adminMode ? theme.secondary : theme.primary,
-              border: adminMode
-                ? "2px solid #ffaa00"
-                : `1px solid ${theme.border}`,
-              fontWeight: adminMode ? "bold" : "normal",
-
-              transform: adminMode ? "scale(1.05)" : "scale(1)",
-              transition: "all 0.2s ease",
-              position: "relative",
-              textShadow: adminMode ? "0 1px 2px rgba(0, 0, 0, 0.3)" : "none",
-            }}
-            title={
-              isUserAdmin
-                ? adminMode
-                  ? "🔓 Admin Mode ACTIVE - Click to exit"
-                  : "🔒 Enter Admin Mode"
-                : "🔑 Unlock Admin Mode"
-            }
+            style={styles.themeButton}
+            title="Enter Admin Mode"
           >
-            {adminMode ? (
-              <>
-                <Shield size={16} />
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-4px",
-                    right: "-4px",
-                    width: "6px",
-                    height: "6px",
-                    backgroundColor: "#ff0000",
-                    borderRadius: "50%",
-                    border: "1px solid white",
-                  }}
-                />
-              </>
-            ) : (
-              <Key size={16} />
-            )}
+            <Key size={16} />
           </button>
         )}
 
@@ -345,7 +307,7 @@ const AuthComponent = ({
   );
 };
 
-const Navigation = ({ characters }) => {
+const Navigation = ({ characters, user }) => {
   const { theme } = useTheme();
   const { adminMode } = useAdmin();
   const styles = createAppStyles(theme);
@@ -353,6 +315,11 @@ const Navigation = ({ characters }) => {
   const location = useLocation();
 
   const getVisibleTabs = () => {
+    // Don't show any tabs if user is not logged in
+    if (!user) {
+      return [];
+    }
+
     const baseTabs = [
       {
         path: "/",
@@ -421,7 +388,7 @@ const Navigation = ({ characters }) => {
       >
         <img
           src={logo}
-          alt="Witches & Snitches Logo"
+          alt="College of Magic Logo"
           style={{
             height: "60px",
             width: "auto",
@@ -471,12 +438,12 @@ const Navigation = ({ characters }) => {
                       fontWeight: "bold",
                     }
                   : isAdminTab && adminMode
-                  ? {
-                      backgroundColor: "#ffd70030",
-                      color: theme.text,
-                      opacity: 0.9,
-                    }
-                  : {}),
+                    ? {
+                        backgroundColor: "#ffd70030",
+                        color: theme.text,
+                        opacity: 0.9,
+                      }
+                    : {}),
               }}
               onClick={() => navigate(tab.path)}
             >
@@ -709,7 +676,7 @@ function AppContent() {
   const styles = createAppStyles(theme);
   const location = useLocation();
   const navigate = useNavigate();
-  const { adminMode, setAdminMode, isUserAdmin, setIsUserAdmin } = useAdmin();
+  const { adminMode, setAdminMode, isUserAdmin } = useAdmin();
 
   const [user, setUser] = useState(null);
   const [customUsername, setCustomUsername] = useState("");
@@ -721,9 +688,6 @@ function AppContent() {
   const [charactersError, setCharactersError] = useState(null);
   const [initialCharacterId, setInitialCharacterId] = useState(null);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
-
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
 
   const [isInitializing, setIsInitializing] = useState(true);
   const initTimeoutRef = useRef(null);
@@ -741,7 +705,7 @@ function AppContent() {
     return null;
   };
   const [selectedCharacter, setSelectedCharacter] = useState(
-    getInitialSelectedCharacter
+    getInitialSelectedCharacter,
   );
 
   const loadingRef = useRef(false);
@@ -755,13 +719,13 @@ function AppContent() {
         if (character) {
           sessionStorage.setItem(
             "selectedCharacterId",
-            character.id.toString()
+            character.id.toString(),
           );
         } else {
           sessionStorage.removeItem("selectedCharacterId");
         }
       }, 100),
-    []
+    [],
   );
 
   const prevSelectedCharacterRef = useRef();
@@ -783,45 +747,7 @@ function AppContent() {
   };
 
   const handleAdminToggleClick = () => {
-    if (adminMode) {
-      setAdminMode(false);
-      return;
-    }
-
-    if (isUserAdmin) {
-      setAdminMode(true);
-    } else {
-      setShowPasswordModal(true);
-    }
-  };
-
-  const handlePasswordSubmit = async (password) => {
-    setIsVerifying(true);
-
-    try {
-      const discordUserId = user?.user_metadata?.provider_id;
-
-      await characterService.verifyAdminPassword(discordUserId, password);
-
-      setIsUserAdmin(true);
-
-      setAdminMode(true);
-
-      setShowPasswordModal(false);
-    } catch (error) {
-      console.error("❌ Password verification failed!");
-      console.error("Error:", error);
-
-      throw error;
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-
-  const handleModalClose = () => {
-    if (!isVerifying) {
-      setShowPasswordModal(false);
-    }
+    setAdminMode(!adminMode);
   };
 
   const selectInitialCharacter = useCallback(
@@ -835,15 +761,15 @@ function AppContent() {
       if (
         selectedCharacter &&
         characters.find(
-          (c) => c.id.toString() === selectedCharacter.id.toString()
+          (c) => c.id.toString() === selectedCharacter.id.toString(),
         )
       ) {
         characterToSelect = characters.find(
-          (c) => c.id.toString() === selectedCharacter.id.toString()
+          (c) => c.id.toString() === selectedCharacter.id.toString(),
         );
       } else if (savedCharacterId) {
         characterToSelect = characters.find(
-          (char) => char.id.toString() === savedCharacterId.toString()
+          (char) => char.id.toString() === savedCharacterId.toString(),
         );
       }
 
@@ -867,7 +793,7 @@ function AppContent() {
         setIsInitializing(false);
       }, 1000);
     },
-    [selectedCharacter, initialCharacterId, debouncedSelectCharacter]
+    [selectedCharacter, initialCharacterId, debouncedSelectCharacter],
   );
 
   const loadingUsernameRef = useRef(false);
@@ -1079,7 +1005,7 @@ function AppContent() {
 
       debouncedSelectCharacter(character);
     },
-    [debouncedSelectCharacter, isInitializing]
+    [debouncedSelectCharacter, isInitializing],
   );
 
   useEffect(() => {
@@ -1224,6 +1150,45 @@ function AppContent() {
             onAdminToggleClick={handleAdminToggleClick}
           />
         </header>
+
+        {adminMode && (
+          <div
+            style={{
+              backgroundColor: "#ffd700",
+              color: "#1a1a2e",
+              padding: "8px 16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "16px",
+              fontWeight: "600",
+              fontSize: "14px",
+              borderBottom: `2px solid #ffaa00`,
+            }}
+          >
+            <Shield size={18} />
+            <span>Admin Mode Active</span>
+            <button
+              onClick={() => setAdminMode(false)}
+              style={{
+                backgroundColor: "#1a1a2e",
+                color: "#ffd700",
+                border: "none",
+                borderRadius: "4px",
+                padding: "4px 12px",
+                fontSize: "12px",
+                fontWeight: "600",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <X size={14} />
+              Exit Admin Mode
+            </button>
+          </div>
+        )}
 
         {location.pathname.startsWith("/character/") && (
           <CharacterSubNavigation />
@@ -1470,12 +1435,6 @@ function AppContent() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
-        <AdminPasswordModal
-          isOpen={showPasswordModal}
-          onClose={handleModalClose}
-          onPasswordSubmit={handlePasswordSubmit}
-          isLoading={isVerifying}
-        />
       </div>
       <footer
         style={{
@@ -1506,7 +1465,7 @@ function AppContent() {
           >
             <h3>View Rulebook</h3>
           </a>
-          © {new Date().getFullYear()} <strong>Witches & Snitches</strong>
+          © {new Date().getFullYear()} <strong>College of Magic</strong>
         </div>
       </footer>
     </div>

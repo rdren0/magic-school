@@ -27,7 +27,7 @@ export const sendDiscordRollWebhook = async ({
       color: embedColor,
       fields: [...fields],
       footer: {
-        text: `${character.name} - Witches and Snitches`,
+        text: `${character.name} - College of Magic`,
       },
       timestamp: new Date().toISOString(),
     };
@@ -227,7 +227,7 @@ export const sendDiscordLevelUpMessage = async ({
       color: 0xffd700,
       fields: fields,
       footer: {
-        text: `${characterName} - Witches and Snitches`,
+        text: `${characterName} - College of Magic`,
       },
       timestamp: new Date().toISOString(),
     };

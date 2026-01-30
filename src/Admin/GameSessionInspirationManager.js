@@ -300,7 +300,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Admin Action",
+            text: "College of Magic - Admin Action",
           },
         };
 
@@ -566,7 +566,7 @@ const GameSessionInspirationManager = ({ supabase }) => {
           ],
           timestamp: new Date().toISOString(),
           footer: {
-            text: "Witches and Snitches - Admin Action",
+            text: "College of Magic - Admin Action",
           },
         };
 

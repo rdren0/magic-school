@@ -1168,31 +1168,6 @@ const CharacterSheet = ({
             <h3>Loading Character Sheet...</h3>
           </div>
         )}
-        {adminMode &&
-          isUserAdmin &&
-          selectedCharacter?.ownerId !== discordUserId && (
-            <div
-              style={{
-                background: "linear-gradient(135deg, #ffd700, #ffed4e)",
-                color: "#8b4513",
-                padding: "12px 20px",
-                borderRadius: "8px",
-                marginBottom: "20px",
-                textAlign: "center",
-                fontWeight: "bold",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                border: "2px solid #ffd700",
-              }}
-            >
-              <Crown size={18} />
-              ADMIN MODE: Viewing {selectedCharacter.name}
-              {selectedCharacter?.gameSession &&
-                ` (Session: ${selectedCharacter.gameSession})`}
-            </div>
-          )}
         {character && !characterLoading && (
           <>
             <div
@@ -1200,12 +1175,7 @@ const CharacterSheet = ({
                 backgroundColor: theme.surface,
                 borderRadius: "0px",
                 padding: "16px",
-                marginTop:
-                  adminMode &&
-                  isUserAdmin &&
-                  selectedCharacter?.ownerId !== discordUserId
-                    ? "0px"
-                    : "calc(-1.5rem - 20px)",
+                marginTop: "calc(-1.5rem - 20px)",
                 marginLeft: "-1.5rem",
                 marginRight: "-1.5rem",
                 marginBottom: "20px",
